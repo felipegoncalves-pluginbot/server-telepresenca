@@ -321,4 +321,23 @@
       }
     });
   });
+
+  // Inicialização automática a partir de parâmetros de URL (padrão de acesso / convite)
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    const autoConnect = urlParams.get('autoConnect') === 'true' || urlParams.get('auto') === 'true';
+
+    if (roomParam && els.roomId) {
+      els.roomId.value = roomParam.trim();
+    }
+
+    if (autoConnect && roomParam) {
+      connect().catch((err) => {
+        console.error('Falha na autoconexão da telepresença:', err);
+      });
+    }
+  } catch (e) {
+    console.warn('Erro ao processar parâmetros da URL:', e);
+  }
 })();

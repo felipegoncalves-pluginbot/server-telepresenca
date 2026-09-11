@@ -5,7 +5,7 @@ const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4040;
 const app = express();
 const server = http.createServer(app);
 
@@ -81,44 +81,45 @@ io.on('connection', (socket) => {
       if (!roomId || typeof roomId !== 'string') {
         throw new Error('roomId inválido');
       }
-      if (role !== 'operator' && role !== 'robot') {
-        throw new Error('role deve ser "operator" ou "robot"');
+      const effectiveRole = role === 'visitor' ? 'operator' : role;
+      if (effectiveRole !== 'operator' && effectiveRole !== 'robot') {
+        throw new Error('role deve ser "operator", "visitor" ou "robot"');
       }
 
       leaveRoom(socket);
 
       const room = rooms.get(roomId) || {};
-      if (room[role] && room[role] !== socket.id) {
-        const previous = io.sockets.sockets.get(room[role]);
+      if (room[effectiveRole] && room[effectiveRole] !== socket.id) {
+        const previous = io.sockets.sockets.get(room[effectiveRole]);
         if (previous) {
-          previous.emit('replaced', { role });
+          previous.emit('replaced', { role: effectiveRole });
           previous.data.roomId = undefined;
           previous.data.role = undefined;
           previous.leave(roomId);
         }
       }
 
-      room[role] = socket.id;
+      room[effectiveRole] = socket.id;
       rooms.set(roomId, room);
       socket.data.roomId = roomId;
-      socket.data.role = role;
+      socket.data.role = effectiveRole;
       socket.join(roomId);
 
-      const peerRole = role === 'operator' ? 'robot' : 'operator';
+      const peerRole = effectiveRole === 'operator' ? 'robot' : 'operator';
       const peerId = room[peerRole];
 
       socket.emit('joined', {
         roomId,
-        role,
+        role: effectiveRole,
         peerPresent: Boolean(peerId),
       });
 
       if (peerId) {
-        socket.to(peerId).emit('peer-joined', { role, socketId: socket.id });
+        socket.to(peerId).emit('peer-joined', { role: effectiveRole, socketId: socket.id });
       }
 
       io.to(roomId).emit('room-state', roomState(roomId));
-      console.log(`[*] ${socket.id} joined room=${roomId} as ${role}`);
+      console.log(`[*] ${socket.id} joined room=${roomId} as ${effectiveRole}`);
 
       if (typeof ack === 'function') {
         ack({ ok: true, ...roomState(roomId) });
