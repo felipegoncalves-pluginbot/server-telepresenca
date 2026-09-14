@@ -23,21 +23,76 @@
     },
   ];
 
+  const DEFAULT_ROOM = "telepresenca";
+  const t = (key, vars) => window.TeleI18n.t(key, vars);
+  const MOVEMENT_I18N = {
+    forward: "movement.forward",
+    backward: "movement.backward",
+    left: "movement.left",
+    right: "movement.right",
+    stop: "movement.stop",
+  };
+  const RTC_I18N = {
+    idle: "rtc.idle",
+    connecting: "rtc.connecting",
+    connected: "rtc.connected",
+    disconnected: "rtc.disconnected",
+    failed: "rtc.failed",
+    error: "rtc.error",
+  };
+
+  const VQ = window.TeleVideoQuality;
+
   const els = {
-    roomId: document.getElementById("roomId"),
-    btnConnect: document.getElementById("btnConnect"),
     btnHangup: document.getElementById("btnHangup"),
+    btnRejoin: document.getElementById("btnRejoin"),
     btnToggleMic: document.getElementById("btnToggleMic"),
     btnToggleCam: document.getElementById("btnToggleCam"),
+    btnVideoQuality: document.getElementById("btnVideoQuality"),
+    btnCloseQuality: document.getElementById("btnCloseQuality"),
+    btnResetVideo: document.getElementById("btnResetVideo"),
+    qualityPanel: document.getElementById("qualityPanel"),
+    qualitySlider: document.getElementById("qualitySlider"),
+    qualityThumb: document.getElementById("qualityThumb"),
+    qualityTrackFill: document.getElementById("qualityTrackFill"),
+    qualityTicks: document.getElementById("qualityTicks"),
+    qualityValueLabel: document.getElementById("qualityValueLabel"),
+    qualityHintLabel: document.getElementById("qualityHintLabel"),
+    qualityStatsLabel: document.getElementById("qualityStatsLabel"),
+    qualityBadge: document.getElementById("qualityBadge"),
     btnSendCommand: document.getElementById("btnSendCommand"),
     localVideo: document.getElementById("localVideo"),
+    localPip: document.getElementById("localPip"),
     remoteVideo: document.getElementById("remoteVideo"),
     remotePlaceholder: document.getElementById("remotePlaceholder"),
+    placeholderText: document.querySelector("#remotePlaceholder p"),
     statusChip: document.getElementById("statusChip"),
-    selfState: document.getElementById("selfState"),
-    robotState: document.getElementById("robotState"),
-    rtcState: document.getElementById("rtcState"),
-    movementControls: document.getElementById("movementControls"),
+    movementHint: document.getElementById("movementHint"),
+    joystick: document.getElementById("joystick"),
+    kbdHint: document.getElementById("kbdHint"),
+    roomLabel: document.getElementById("roomLabel"),
+    endedOverlay: document.getElementById("endedOverlay"),
+    langToggle: document.getElementById("langToggle"),
+    langMenu: document.getElementById("langMenu"),
+    langCurrentFlag: document.getElementById("langCurrentFlag"),
+  };
+
+  const FLAG_BY_LOCALE = {
+    "pt-BR": "assets/flags/br.png",
+    en: "assets/flags/us.png",
+    es: "assets/flags/es.png",
+    fr: "assets/flags/fr.png",
+  };
+
+  const KEY_FEEDBACK = {
+    w: "w",
+    arrowup: "w",
+    a: "a",
+    arrowleft: "a",
+    s: "s",
+    arrowdown: "s",
+    d: "d",
+    arrowright: "d",
   };
 
   let socket = null;
@@ -45,23 +100,261 @@
   let localStream = null;
   let makingOffer = false;
   let ignoreOffer = false;
-  let isPolite = true; // operator is polite peer
+  let isPolite = true;
   let connected = false;
+  let connecting = false;
+  let roomId = DEFAULT_ROOM;
+  let joystick = null;
+  let robotCapabilities = null;
+  let videoCapabilities = VQ ? VQ.resolveVideoCapabilities(null) : null;
+  let qualityPanel = null;
+  let qualityStatsTimer = null;
+  let activeMovement = null;
+  let movementHeartbeat = null;
+  let mediaRequest = null;
+  let mediaGeneration = 0;
+  let audioUnlockBound = false;
 
-  function setStatus(text, mode = "") {
-    els.statusChip.textContent = text;
+  function resolveRoomId() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get("room") || params.get("roomId");
+      if (fromUrl && fromUrl.trim()) return fromUrl.trim();
+    } catch (_) {
+      /* ignore */
+    }
+    return DEFAULT_ROOM;
+  }
+
+  function setPlaceholder(key) {
+    if (!els.placeholderText) return;
+    els.placeholderText.dataset.i18n = key;
+    els.placeholderText.textContent = t(key);
+  }
+
+  function setStatus(key, mode = "") {
+    els.statusChip.textContent = t(key);
+    els.statusChip.dataset.i18n = key;
     els.statusChip.className = `status-chip ${mode}`.trim();
   }
 
-  function setRtcState(text) {
-    els.rtcState.textContent = text;
+  function setRtcState(state) {
+    els.statusChip.dataset.rtc = state || "";
+    const key = RTC_I18N[state];
+    if (!key) {
+      els.statusChip.removeAttribute("title");
+      return;
+    }
+    els.statusChip.title = t(key);
   }
 
-  function updateRoomUi(state) {
-    els.selfState.textContent = state?.operator ? "online" : "offline";
-    els.robotState.textContent = state?.robot ? "online" : "offline";
-    if (state?.robotCapabilities) {
-      applyRobotCapabilities(state.robotCapabilities);
+  function showEnded(show) {
+    els.endedOverlay.classList.toggle("hidden", !show);
+  }
+
+  function micTrack() {
+    return localStream ? localStream.getAudioTracks()[0] : null;
+  }
+
+  function camTrack() {
+    return localStream ? localStream.getVideoTracks()[0] : null;
+  }
+
+  function refreshMediaButtons() {
+    const mic = micTrack();
+    const cam = camTrack();
+    const micOn = Boolean(mic && mic.enabled);
+    const camOn = Boolean(cam && cam.enabled);
+    els.btnToggleMic.classList.toggle("is-off", connected && !micOn);
+    els.btnToggleCam.classList.toggle("is-off", connected && !camOn);
+    els.btnToggleMic.setAttribute(
+      "aria-label",
+      t(micOn ? "media.micOn" : "media.micOff"),
+    );
+    els.btnToggleCam.setAttribute(
+      "aria-label",
+      t(camOn ? "media.camOn" : "media.camOff"),
+    );
+    els.localPip.classList.toggle("hidden", !camOn);
+  }
+
+  function refreshDynamicText() {
+    const statusKey = els.statusChip.dataset.i18n;
+    if (statusKey) els.statusChip.textContent = t(statusKey);
+    if (els.placeholderText?.dataset.i18n) {
+      els.placeholderText.textContent = t(els.placeholderText.dataset.i18n);
+    }
+    els.roomLabel.textContent = t("room.label", { id: roomId });
+    els.btnHangup.setAttribute("aria-label", t("call.hangup"));
+    els.btnSendCommand.setAttribute("aria-label", t("media.beep"));
+    if (els.btnVideoQuality) {
+      els.btnVideoQuality.setAttribute("aria-label", t("video.openPanel"));
+    }
+    els.joystick.setAttribute("aria-label", t("movement.joystick"));
+    els.joystick.title = t("movement.hintKeyboard");
+    if (els.kbdHint) {
+      els.kbdHint.setAttribute("aria-label", t("movement.hintKeyboard"));
+    }
+    updateLangFlag();
+    updateMovementHint();
+    refreshMediaButtons();
+    qualityPanel?.refreshLabels();
+  }
+
+  function updateLangFlag() {
+    const locale = window.TeleI18n.locale;
+    const src = FLAG_BY_LOCALE[locale] || FLAG_BY_LOCALE["pt-BR"];
+    if (els.langCurrentFlag) els.langCurrentFlag.src = src;
+    if (els.langToggle) {
+      els.langToggle.setAttribute("aria-label", t("lang.group"));
+      els.langToggle.title = t(`lang.${locale}`);
+    }
+  }
+
+  function setLangMenuOpen(open) {
+    if (!els.langMenu || !els.langToggle) return;
+    els.langMenu.classList.toggle("hidden", !open);
+    els.langToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function setKeyFeedback(key, on) {
+    const mapped = KEY_FEEDBACK[key];
+    if (!mapped || !els.kbdHint) return;
+    const cap = els.kbdHint.querySelector(`[data-key="${mapped}"]`);
+    if (cap) cap.classList.toggle("is-active", on);
+  }
+
+  function isContinuousBackward() {
+    return robotCapabilities?.locomotion?.backwardMode === "continuous";
+  }
+
+  function updateMovementHint() {
+    if (!els.movementHint) return;
+    if (isContinuousBackward()) {
+      els.movementHint.textContent = t("movement.hintContinuous");
+      return;
+    }
+    const dist = robotCapabilities?.locomotion?.backwardPulseDistanceM ?? 0.2;
+    els.movementHint.textContent = t("movement.hintPulse", {
+      cm: Math.round(dist * 100),
+    });
+  }
+
+  function applyRobotCapabilities(caps) {
+    robotCapabilities = caps && typeof caps === "object" ? caps : null;
+    if (VQ) {
+      videoCapabilities = VQ.resolveVideoCapabilities(robotCapabilities);
+      if (qualityPanel) {
+        const preset = qualityPanel.setPresets(
+          videoCapabilities.presets,
+          VQ.loadSavedPresetId(videoCapabilities.defaultPreset),
+        );
+        updateQualityBadge(preset);
+        sendVideoQualityToRobot(preset.id);
+      }
+    }
+    updateMovementHint();
+  }
+
+  const QUALITY_BADGE = {
+    auto: "A",
+    low: "L",
+    mid: "M",
+    high: "H",
+    max: "X",
+  };
+
+  function updateQualityBadge(preset) {
+    if (!els.qualityBadge || !preset) return;
+    els.qualityBadge.textContent =
+      QUALITY_BADGE[preset.id] || preset.id.slice(0, 1).toUpperCase();
+  }
+
+  function sendVideoQualityToRobot(presetId) {
+    if (!socket || !connected || !presetId) return;
+    socket.emit("video-quality", { presetId });
+  }
+
+  async function applyLocalVideoQuality(preset) {
+    if (!pc || !VQ || !preset) return;
+    try {
+      await VQ.applyOutgoingVideoQuality(pc, preset);
+    } catch (err) {
+      console.warn("Failed to apply outgoing video quality:", err);
+    }
+  }
+
+  async function handleQualityPresetChange(preset) {
+    if (!preset) return;
+    VQ.savePresetId(preset.id);
+    updateQualityBadge(preset);
+    if (els.qualityTrackFill && qualityPanel) {
+      const presets = videoCapabilities?.presets || VQ.DEFAULT_PRESETS;
+      const index = presets.findIndex((item) => item.id === preset.id);
+      const ratio =
+        presets.length <= 1 ? 0 : Math.max(0, index) / (presets.length - 1);
+      els.qualityTrackFill.style.width = `${ratio * 100}%`;
+    }
+    sendVideoQualityToRobot(preset.id);
+    await applyLocalVideoQuality(preset);
+  }
+
+  async function resetVideoConnection() {
+    if (!connected || !socket) return;
+    cleanupPeer();
+    setPlaceholder("status.connecting");
+    setStatus("status.connecting", "online");
+    await createPeerConnection();
+    await startCallAsOfferer();
+    const preset = qualityPanel?.getSelectedPreset();
+    if (preset) {
+      sendVideoQualityToRobot(preset.id);
+      await applyLocalVideoQuality(preset);
+    }
+  }
+
+  function startQualityStatsPolling() {
+    stopQualityStatsPolling();
+    qualityStatsTimer = setInterval(async () => {
+      if (!pc || !qualityPanel) return;
+      try {
+        const stats = await VQ.readIncomingVideoStats(pc);
+        qualityPanel.updateStats(stats);
+      } catch (_) {
+        /* ignore */
+      }
+    }, 1500);
+  }
+
+  function stopQualityStatsPolling() {
+    if (qualityStatsTimer) {
+      clearInterval(qualityStatsTimer);
+      qualityStatsTimer = null;
+    }
+  }
+
+  function setQualityPanelOpen(open) {
+    if (!qualityPanel || !els.btnVideoQuality) return;
+    qualityPanel.setPanelOpen(open);
+    els.btnVideoQuality.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function setConnectedUi(isConnected) {
+    connected = isConnected;
+    connecting = false;
+    els.btnHangup.disabled = !isConnected;
+    els.btnToggleMic.disabled = !isConnected;
+    els.btnToggleCam.disabled = !isConnected;
+    els.btnVideoQuality.disabled = !isConnected;
+    els.btnSendCommand.disabled = !isConnected;
+    if (els.btnResetVideo) els.btnResetVideo.disabled = !isConnected;
+    if (joystick) joystick.setEnabled(isConnected);
+    if (isConnected) {
+      showEnded(false);
+      startQualityStatsPolling();
+    } else {
+      stopQualityStatsPolling();
+      setQualityPanelOpen(false);
     }
   }
 
@@ -69,24 +362,69 @@
     if (localStream) return localStream;
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       console.warn(
-        "navigator.mediaDevices não disponível neste navegador/contexto (HTTP sem TLS). Conectando em modo controle/recepção de vídeo.",
+        "navigator.mediaDevices unavailable in this context; recvonly mode.",
       );
       return null;
     }
-    try {
-      localStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user",
-        },
+    if (!mediaRequest) {
+      const generation = mediaGeneration;
+      mediaRequest = navigator.mediaDevices
+        .getUserMedia({
+          audio: true,
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user",
+          },
+        })
+        .then((stream) => {
+          if (generation !== mediaGeneration) {
+            stream.getTracks().forEach((track) => track.stop());
+            return null;
+          }
+          localStream = stream;
+          els.localVideo.srcObject = stream;
+          refreshMediaButtons();
+          playRemoteWithSound();
+          return attachLocalMediaToPeer().then(() => stream);
+        })
+        .catch((err) => {
+          console.warn("Operator camera/microphone unavailable:", err);
+          mediaRequest = null;
+          return null;
+        });
+    }
+    return mediaRequest;
+  }
+
+  async function attachLocalMediaToPeer() {
+    if (!pc || !localStream) return;
+    let upgraded = false;
+    for (const track of localStream.getTracks()) {
+      const transceiver = pc.getTransceivers().find((item) => {
+        const senderKind = item.sender?.track?.kind;
+        const receiverKind = item.receiver?.track?.kind;
+        return senderKind === track.kind || receiverKind === track.kind;
       });
-      els.localVideo.srcObject = localStream;
-      return localStream;
-    } catch (err) {
-      console.warn("Não foi possível obter microfone/câmera do operador:", err);
-      return null;
+      if (transceiver?.sender) {
+        if (
+          transceiver.direction === "recvonly" ||
+          transceiver.direction === "inactive"
+        ) {
+          transceiver.direction = "sendrecv";
+          upgraded = true;
+        }
+        if (transceiver.sender.track !== track) {
+          await transceiver.sender.replaceTrack(track);
+          upgraded = true;
+        }
+      } else {
+        pc.addTrack(track, localStream);
+        upgraded = true;
+      }
+    }
+    if (upgraded && socket && pc.signalingState === "stable") {
+      await startCallAsOfferer();
     }
   }
 
@@ -104,24 +442,47 @@
     setRtcState("idle");
   }
 
+  function unlockRemoteAudioOnce() {
+    if (audioUnlockBound) return;
+    audioUnlockBound = true;
+    const unlock = () => {
+      audioUnlockBound = false;
+      playRemoteWithSound();
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+  }
+
+  async function playRemoteWithSound() {
+    const video = els.remoteVideo;
+    if (!video.srcObject) return;
+    video.muted = false;
+    video.volume = 1;
+    try {
+      await video.play();
+    } catch (_) {
+      unlockRemoteAudioOnce();
+    }
+  }
+
   async function createPeerConnection() {
     cleanupPeer();
     pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
-    const stream = await ensureMedia();
-    if (stream) {
-      for (const track of stream.getTracks()) {
-        pc.addTrack(track, stream);
+    if (localStream) {
+      for (const track of localStream.getTracks()) {
+        pc.addTrack(track, localStream);
       }
     } else {
-      // Modo de somente recepção (recvonly): permite receber o vídeo/áudio do robô e controlá-lo
-      // mesmo se o navegador bloquear acesso ao microfone/webcam do operador por restrição HTTP.
       try {
         pc.addTransceiver("video", { direction: "recvonly" });
         pc.addTransceiver("audio", { direction: "recvonly" });
-      } catch (e) {
-        console.warn("Falha ao registrar transceivers recvonly:", e);
+      } catch (err) {
+        console.warn("Failed to add recvonly transceivers:", err);
       }
+      ensureMedia();
     }
 
     pc.onicecandidate = (event) => {
@@ -134,10 +495,11 @@
     };
 
     pc.ontrack = (event) => {
-      const [stream] = event.streams;
-      els.remoteVideo.srcObject = stream;
+      const [remoteStream] = event.streams;
+      els.remoteVideo.srcObject = remoteStream;
       els.remotePlaceholder.classList.add("hidden");
-      setStatus("Em telepresença", "live");
+      setStatus("status.live", "live");
+      playRemoteWithSound();
     };
 
     pc.onconnectionstatechange = () => {
@@ -146,15 +508,16 @@
         pc.connectionState === "failed" ||
         pc.connectionState === "disconnected"
       ) {
-        setStatus("Conexão WebRTC instável", "online");
+        setStatus("status.webrtcUnstable", "online");
       }
       if (pc.connectionState === "connected") {
-        setStatus("Em telepresença", "live");
+        setStatus("status.live", "live");
+        const preset = qualityPanel?.getSelectedPreset();
+        if (preset) {
+          sendVideoQualityToRobot(preset.id);
+          applyLocalVideoQuality(preset).catch((err) => console.warn(err));
+        }
       }
-    };
-
-    pc.onsignalingstatechange = () => {
-      // no-op; useful for debugging
     };
 
     return pc;
@@ -213,56 +576,45 @@
     }
   }
 
-  function setConnectedUi(isConnected) {
-    connected = isConnected;
-    els.btnConnect.disabled = isConnected;
-    els.btnHangup.disabled = !isConnected;
-    els.btnToggleMic.disabled = !isConnected;
-    els.btnToggleCam.disabled = !isConnected;
-    els.btnSendCommand.disabled = !isConnected;
-    if (els.movementControls) {
-      els.movementControls.disabled = !isConnected;
-    }
-    els.roomId.disabled = isConnected;
-  }
-
   async function connect() {
-    const roomId = (els.roomId.value || "telepresenca").trim();
-    if (!roomId) {
-      alert("Informe o nome da sala.");
-      return;
-    }
+    if (socket || connecting) return;
+    connecting = true;
+    showEnded(false);
+    setPlaceholder("status.connecting");
+    setStatus("status.connecting", "online");
+    els.remotePlaceholder.classList.remove("hidden");
 
-    const stream = await ensureMedia();
-    if (
-      !stream &&
-      !window.isSecureContext &&
-      location.hostname !== "localhost" &&
-      location.hostname !== "127.0.0.1"
-    ) {
-      setStatus(
-        "Acesso HTTP: Modo controle e recepção de vídeo ativado",
-        "online",
-      );
-    }
+    ensureMedia().then((stream) => {
+      if (
+        !stream &&
+        !window.isSecureContext &&
+        location.hostname !== "localhost" &&
+        location.hostname !== "127.0.0.1"
+      ) {
+        setStatus("status.httpRecvOnly", "online");
+      }
+    });
 
     socket = io({ transports: ["websocket", "polling"] });
 
     socket.on("connect", () => {
-      setStatus("Conectado ao servidor", "online");
+      setStatus("status.connected", "online");
       socket.emit("join", { roomId, role: "operator" }, (ack) => {
         if (ack && !ack.ok) {
-          alert(ack.error || "Falha ao entrar na sala");
-          disconnect();
+          setStatus("status.joinFailed", "");
+          disconnect({ ended: true });
           return;
         }
-        updateRoomUi(ack);
+        if (ack?.robotCapabilities) {
+          applyRobotCapabilities(ack.robotCapabilities);
+        }
       });
     });
 
     socket.on("joined", async (payload) => {
       setConnectedUi(true);
-      setStatus("Aguardando o robô…", "online");
+      setPlaceholder("status.waitingRobot");
+      setStatus("status.waitingRobot", "online");
       if (payload?.robotCapabilities) {
         applyRobotCapabilities(payload.robotCapabilities);
       }
@@ -272,7 +624,6 @@
     });
 
     socket.on("peer-joined", async (payload) => {
-      els.robotState.textContent = "online";
       if (payload?.robotCapabilities) {
         applyRobotCapabilities(payload.robotCapabilities);
       }
@@ -280,36 +631,45 @@
     });
 
     socket.on("peer-left", () => {
-      els.robotState.textContent = "offline";
       cleanupPeer();
-      setStatus("Robô desconectado", "online");
+      setPlaceholder("status.waitingRobot");
+      setStatus("status.robotLeft", "online");
     });
 
-    socket.on("room-state", updateRoomUi);
+    socket.on("room-state", (state) => {
+      if (state?.robotCapabilities) {
+        applyRobotCapabilities(state.robotCapabilities);
+      }
+    });
 
     socket.on("signal", async (message) => {
       try {
         await handleSignal(message);
       } catch (err) {
         console.error(err);
-        setRtcState("erro");
+        setRtcState("error");
       }
     });
 
     socket.on("hangup", () => {
       cleanupPeer();
-      setStatus("Chamada encerrada pelo robô", "online");
+      setPlaceholder("status.endedByRobot");
+      setStatus("status.endedByRobot", "online");
     });
 
     socket.on("disconnect", () => {
-      setStatus("Desconectado", "");
+      stopMovement(true);
+      setStatus("status.disconnected", "");
       setConnectedUi(false);
       cleanupPeer();
-      updateRoomUi({ operator: false, robot: false });
+      showEnded(true);
     });
   }
 
-  function disconnect() {
+  function disconnect({ ended = true } = {}) {
+    stopMovement(true);
+    stopQualityStatsPolling();
+    setQualityPanelOpen(false);
     if (socket) {
       socket.emit("hangup");
       socket.emit("leave");
@@ -318,77 +678,21 @@
     }
     cleanupPeer();
     if (localStream) {
-      localStream.getTracks().forEach((t) => t.stop());
+      localStream.getTracks().forEach((track) => track.stop());
       localStream = null;
       els.localVideo.srcObject = null;
     }
+    mediaGeneration += 1;
+    mediaRequest = null;
     setConnectedUi(false);
-    setStatus("Desconectado", "");
-    updateRoomUi({ operator: false, robot: false });
-    els.btnToggleMic.textContent = "Mic: ligado";
-    els.btnToggleCam.textContent = "Câm: ligada";
+    setStatus("status.disconnected", "");
+    refreshMediaButtons();
+    if (ended) showEnded(true);
   }
-
-  els.btnConnect.addEventListener("click", () => {
-    connect().catch((err) => {
-      console.error(err);
-      alert(err.message);
-    });
-  });
-
-  els.btnHangup.addEventListener("click", disconnect);
-
-  els.btnToggleMic.addEventListener("click", () => {
-    if (!localStream) return;
-    const track = localStream.getAudioTracks()[0];
-    if (!track) return;
-    track.enabled = !track.enabled;
-    els.btnToggleMic.textContent = track.enabled ? "Mic: ligado" : "Mic: mudo";
-  });
-
-  els.btnToggleCam.addEventListener("click", () => {
-    if (!localStream) return;
-    const track = localStream.getVideoTracks()[0];
-    if (!track) return;
-    track.enabled = !track.enabled;
-    els.btnToggleCam.textContent = track.enabled ? "Câm: ligada" : "Câm: off";
-  });
 
   function sendControl(action) {
     if (!socket || !connected) return;
     socket.volatile.emit("control", { action });
-    if (action === "beep") {
-      setStatus("Comando enviado ao robô", "online");
-    }
-  }
-
-  let activeMovement = null;
-  let movementHeartbeat = null;
-  let robotCapabilities = null;
-
-  function applyRobotCapabilities(caps) {
-    robotCapabilities = caps && typeof caps === "object" ? caps : null;
-    updateMovementHint();
-  }
-
-  /** Ré contínua só quando o robô anuncia sensor traseiro + modo continuous. */
-  function isContinuousBackward() {
-    const mode = robotCapabilities?.locomotion?.backwardMode;
-    return mode === "continuous";
-  }
-
-  function updateMovementHint() {
-    const hint = document.querySelector("#movementControls .hint");
-    if (!hint) return;
-    if (isContinuousBackward()) {
-      hint.textContent =
-        "Use os botões ou o teclado (WASD / Setas / Espaço). Ré contínua disponível.";
-      return;
-    }
-    const dist =
-      robotCapabilities?.locomotion?.backwardPulseDistanceM ?? 0.2;
-    hint.textContent =
-      `Frente/giros: segure. Ré: um clique ≈ ${Math.round(dist * 100)} cm (sem sensor traseiro).`;
   }
 
   function sendBackwardPulse() {
@@ -399,7 +703,6 @@
   function startMovement(action) {
     if (!action || !connected || !socket) return;
 
-    // Ré por pulso: um comando por toque/tecla — robô reforça no firmware.
     if (action === "backward" && !isContinuousBackward()) {
       sendBackwardPulse();
       return;
@@ -411,8 +714,6 @@
     activeMovement = action;
     sendControl(action);
 
-    // Heartbeat contínuo a cada 200ms enquanto o operador mantiver pressionado.
-    // Garante que o watchdog do robô (500ms) permaneça ativo sem enviar chamadas excessivas.
     movementHeartbeat = setInterval(() => {
       if (activeMovement && connected && socket) {
         sendControl(activeMovement);
@@ -436,59 +737,155 @@
     }
   }
 
-  // Intercepta perda de foco da aba para garantir parada do robô
+  async function toggleMic() {
+    if (!connected) return;
+    if (!localStream) {
+      await ensureMedia();
+      await attachLocalMediaToPeer();
+    }
+    const track = micTrack();
+    if (!track) return;
+    track.enabled = !track.enabled;
+    refreshMediaButtons();
+  }
+
+  async function toggleCam() {
+    if (!connected) return;
+    if (!localStream) {
+      await ensureMedia();
+      await attachLocalMediaToPeer();
+    }
+    const track = camTrack();
+    if (!track) return;
+    track.enabled = !track.enabled;
+    refreshMediaButtons();
+  }
+
+  function bindControls() {
+    if (VQ) {
+      qualityPanel = VQ.createVideoQualityPanel({
+        root: els.qualityPanel,
+        slider: els.qualitySlider,
+        thumb: els.qualityThumb,
+        ticks: els.qualityTicks,
+        valueLabel: els.qualityValueLabel,
+        hintLabel: els.qualityHintLabel,
+        statsLabel: els.qualityStatsLabel,
+        resetButton: els.btnResetVideo,
+        closeButton: els.btnCloseQuality,
+        t,
+        onPresetChange(preset) {
+          handleQualityPresetChange(preset).catch((err) => console.error(err));
+        },
+        onResetConnection() {
+          resetVideoConnection().catch((err) => console.error(err));
+        },
+      });
+      const initialPreset = qualityPanel.setPresets(
+        videoCapabilities.presets,
+        VQ.loadSavedPresetId(videoCapabilities.defaultPreset),
+      );
+      updateQualityBadge(initialPreset);
+      const ratio =
+        videoCapabilities.presets.length <= 1
+          ? 0
+          : videoCapabilities.presets.findIndex((item) => item.id === initialPreset.id) /
+            (videoCapabilities.presets.length - 1);
+      if (els.qualityTrackFill) {
+        els.qualityTrackFill.style.width = `${Math.max(0, ratio) * 100}%`;
+      }
+    }
+
+    if (els.btnVideoQuality) {
+      els.btnVideoQuality.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (!connected) return;
+        setQualityPanelOpen(!qualityPanel?.isPanelOpen());
+      });
+    }
+
+    document.addEventListener("click", (event) => {
+      if (!qualityPanel?.isPanelOpen()) return;
+      const panel = els.qualityPanel;
+      const button = els.btnVideoQuality;
+      if (panel?.contains(event.target) || button?.contains(event.target)) return;
+      setQualityPanelOpen(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && qualityPanel?.isPanelOpen()) {
+        setQualityPanelOpen(false);
+      }
+    });
+
+    els.btnHangup.addEventListener("click", () => disconnect({ ended: true }));
+    els.btnRejoin.addEventListener("click", () => {
+      connect().catch((err) => console.error(err));
+    });
+    els.btnToggleMic.addEventListener("click", () => {
+      toggleMic().catch((err) => console.error(err));
+    });
+    els.btnToggleCam.addEventListener("click", () => {
+      toggleCam().catch((err) => console.error(err));
+    });
+    els.btnSendCommand.addEventListener("click", () => {
+      if (els.btnSendCommand.disabled) return;
+      sendControl("beep");
+    });
+
+    if (els.langToggle) {
+      els.langToggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setLangMenuOpen(els.langMenu.classList.contains("hidden"));
+      });
+    }
+    document.addEventListener("click", (event) => {
+      const root = document.getElementById("langSwitch");
+      if (!root || root.contains(event.target)) return;
+      setLangMenuOpen(false);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") setLangMenuOpen(false);
+    });
+
+    joystick = window.createTeleJoystick(els.joystick, {
+      onDirection(action) {
+        startMovement(action);
+        els.joystick.setAttribute(
+          "aria-valuetext",
+          t(MOVEMENT_I18N[action] || MOVEMENT_I18N.stop),
+        );
+      },
+      onEnd() {
+        stopMovement(true);
+        els.joystick.setAttribute("aria-valuetext", t(MOVEMENT_I18N.stop));
+      },
+    });
+    joystick.setEnabled(false);
+
+    document.querySelectorAll("[data-locale]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        window.TeleI18n.setLocale(btn.getAttribute("data-locale"));
+        setLangMenuOpen(false);
+      });
+    });
+
+    document.addEventListener("localechange", refreshDynamicText);
+  }
+
   window.addEventListener("blur", () => {
     stopMovement(true);
   });
 
-  // Botões de controle na interface web (clique para beep, segurar/soltar para movimento)
-  document.querySelectorAll("[data-control]").forEach((btn) => {
-    const action = btn.dataset.control;
-
-    if (action === "beep") {
-      btn.addEventListener("click", () => {
-        if (btn.disabled) return;
-        sendControl("beep");
-      });
-      return;
-    }
-
-    if (action === "stop") {
-      btn.addEventListener("click", () => {
-        stopMovement(true);
-      });
-      return;
-    }
-
-    const onPointerDown = (e) => {
-      e.preventDefault();
-      if (btn.disabled) return;
-      startMovement(action);
-    };
-
-    const onPointerUp = (e) => {
-      e.preventDefault();
-      stopMovement(true);
-    };
-
-    btn.addEventListener("mousedown", onPointerDown);
-    btn.addEventListener("mouseup", onPointerUp);
-    btn.addEventListener("mouseleave", onPointerUp);
-    btn.addEventListener("touchstart", onPointerDown, { passive: false });
-    btn.addEventListener("touchend", onPointerUp, { passive: false });
-    btn.addEventListener("touchcancel", onPointerUp, { passive: false });
-  });
-
-  // Atalhos de teclado ergonômicos e suaves (WASD / Setas / Espaço)
-  window.addEventListener("keydown", (e) => {
+  window.addEventListener("keydown", (event) => {
     if (!connected || !socket) return;
     const tag = document.activeElement
       ? document.activeElement.tagName.toLowerCase()
       : "";
     if (tag === "input" || tag === "textarea") return;
-    if (e.repeat) return; // Ignora repetição do SO para eliminar travamentos e DEVICE_CONFLICT
+    if (event.repeat) return;
 
-    const key = e.key.toLowerCase();
+    const key = event.key.toLowerCase();
     let action = null;
 
     if (key === "arrowup" || key === "w") action = "forward";
@@ -496,24 +893,23 @@
     else if (key === "arrowleft" || key === "a") action = "left";
     else if (key === "arrowright" || key === "d") action = "right";
     else if (key === " " || key === "escape") {
-      e.preventDefault();
+      event.preventDefault();
       stopMovement(true);
       return;
     }
 
     if (action) {
-      e.preventDefault();
+      event.preventDefault();
+      setKeyFeedback(key, true);
       startMovement(action);
     }
   });
 
-  window.addEventListener("keyup", (e) => {
+  window.addEventListener("keyup", (event) => {
     if (!connected || !socket) return;
-    const key = e.key.toLowerCase();
+    const key = event.key.toLowerCase();
     if (key === "arrowdown" || key === "s") {
-      if (!isContinuousBackward()) {
-        return;
-      }
+      if (!isContinuousBackward()) return;
     }
     const movementKeys = [
       "w",
@@ -526,29 +922,24 @@
       "arrowright",
     ];
     if (movementKeys.includes(key)) {
-      e.preventDefault();
+      event.preventDefault();
+      setKeyFeedback(key, false);
       stopMovement(true);
     }
   });
 
-  // Inicialização automática a partir de parâmetros de URL (padrão de acesso / convite)
-  try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get("room");
-    const autoConnect =
-      urlParams.get("autoConnect") === "true" ||
-      urlParams.get("auto") === "true";
-
-    if (roomParam && els.roomId) {
-      els.roomId.value = roomParam.trim();
-    }
-
-    if (autoConnect && roomParam) {
-      connect().catch((err) => {
-        console.error("Falha na autoconexão da telepresença:", err);
-      });
-    }
-  } catch (e) {
-    console.warn("Erro ao processar parâmetros da URL:", e);
+  async function boot() {
+    roomId = resolveRoomId();
+    await window.TeleI18n.init();
+    window.TeleI18n.apply();
+    bindControls();
+    refreshDynamicText();
+    await connect();
   }
+
+  boot().catch((err) => {
+    console.error(err);
+    setStatus("status.disconnected", "");
+    showEnded(true);
+  });
 })();

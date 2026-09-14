@@ -177,6 +177,23 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('video-quality', (payload) => {
+    const { roomId, role } = socket.data;
+    if (!roomId || role !== 'operator' || !payload) return;
+
+    const presetId =
+      typeof payload.presetId === 'string' ? payload.presetId.trim() : '';
+    if (!presetId) return;
+
+    const room = rooms.get(roomId);
+    if (!room?.robot) return;
+
+    io.to(room.robot).emit('video-quality', {
+      presetId,
+      from: 'operator',
+    });
+  });
+
   socket.on('hangup', () => {
     const { roomId } = socket.data;
     if (!roomId) return;

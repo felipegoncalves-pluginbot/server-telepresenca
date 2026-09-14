@@ -2,130 +2,369 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b0f14" />
     <title>Telepresença — Operador</title>
+    <link rel="icon" href="assets/logo-pluginbot.png" />
     <link rel="stylesheet" href="style.css" />
     <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
     <div class="app">
-      <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark"></span>
-          <div>
-            <h1>Telepresença</h1>
-            <p>Painel do operador</p>
+      <div class="stage">
+        <video id="remoteVideo" autoplay playsinline></video>
+
+        <div class="vignette" aria-hidden="true"></div>
+
+        <div class="remote-overlay" id="remotePlaceholder">
+          <div class="waiting-mark" aria-hidden="true"></div>
+          <p data-i18n="status.waitingRobot">Aguardando o robô…</p>
+        </div>
+
+        <header class="hud-top">
+          <div class="brand">
+            <img
+              class="brand-logo"
+              src="assets/logo-pluginbot.png"
+              alt="Pluginbot"
+              data-i18n-alt="brand.alt"
+            />
+            <span class="room-label" id="roomLabel"></span>
+          </div>
+          <div class="hud-top-right">
+            <div
+              class="status-chip"
+              id="statusChip"
+              role="status"
+              aria-live="polite"
+              data-i18n="status.disconnected"
+            >
+              Desconectado
+            </div>
+            <div class="lang-switch" id="langSwitch">
+              <button
+                type="button"
+                id="langToggle"
+                class="lang-current"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                data-i18n-aria="lang.group"
+                aria-label="Idioma"
+              >
+                <img
+                  id="langCurrentFlag"
+                  src="assets/flags/br.png"
+                  alt=""
+                  width="22"
+                  height="16"
+                />
+              </button>
+              <ul
+                class="lang-menu hidden"
+                id="langMenu"
+                role="listbox"
+                data-i18n-aria="lang.group"
+              >
+                <li role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    data-locale="pt-BR"
+                    data-i18n-aria="lang.pt-BR"
+                    data-i18n-title="lang.pt-BR"
+                    title="Português"
+                  >
+                    <img src="assets/flags/br.png" alt="" width="22" height="16" />
+                    <span data-i18n="lang.pt-BR">Português</span>
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    data-locale="en"
+                    data-i18n-aria="lang.en"
+                    data-i18n-title="lang.en"
+                    title="English"
+                  >
+                    <img src="assets/flags/us.png" alt="" width="22" height="16" />
+                    <span data-i18n="lang.en">English</span>
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    data-locale="es"
+                    data-i18n-aria="lang.es"
+                    data-i18n-title="lang.es"
+                    title="Español"
+                  >
+                    <img src="assets/flags/es.png" alt="" width="22" height="16" />
+                    <span data-i18n="lang.es">Español</span>
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    data-locale="fr"
+                    data-i18n-aria="lang.fr"
+                    data-i18n-title="lang.fr"
+                    title="Français"
+                  >
+                    <img src="assets/flags/fr.png" alt="" width="22" height="16" />
+                    <span data-i18n="lang.fr">Français</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </header>
+
+        <div class="move-hud">
+          <div class="joystick-wrap">
+            <div
+              id="joystick"
+              class="joystick is-disabled"
+              role="application"
+              data-i18n-aria="movement.joystick"
+              aria-label="Controle de movimento do robô"
+            >
+              <span class="joy-chevron n" aria-hidden="true"></span>
+              <span class="joy-chevron e" aria-hidden="true"></span>
+              <span class="joy-chevron s" aria-hidden="true"></span>
+              <span class="joy-chevron w" aria-hidden="true"></span>
+              <div class="joystick-stick"></div>
+            </div>
+            <p class="joystick-hint" id="movementHint"></p>
+          </div>
+
+          <div
+            class="kbd-hint"
+            id="kbdHint"
+            data-i18n-aria="movement.hintKeyboard"
+            aria-label="WASD ou setas para mover. Espaço para parar."
+          >
+            <span class="kbd-key" data-key="w">W</span>
+            <span class="kbd-key" data-key="a">A</span>
+            <span class="kbd-key" data-key="s">S</span>
+            <span class="kbd-key" data-key="d">D</span>
           </div>
         </div>
-        <div class="status-chip" id="statusChip">Desconectado</div>
-      </header>
 
-      <main class="stage">
-        <section class="remote-panel">
-          <video id="remoteVideo" autoplay playsinline muted></video>
-          <button id="btnUnmuteAudio" class="unmute-floating hidden" type="button">🔊 Ativar Som</button>
-          <div class="remote-overlay" id="remotePlaceholder">
-            <p>Aguardando o robô (celular)…</p>
-          </div>
-          <div class="local-pip">
-            <video id="localVideo" autoplay playsinline muted></video>
-          </div>
-        </section>
+        <div class="local-pip hidden" id="localPip">
+          <video id="localVideo" autoplay playsinline muted></video>
+        </div>
 
-        <aside class="controls">
-          <label>
-            Sala
-            <input
-              id="roomId"
-              type="text"
-              value="telepresenca"
-              autocomplete="off"
-            />
-          </label>
+        <footer class="call-bar" id="callBar">
+          <button
+            id="btnToggleMic"
+            class="ctrl"
+            type="button"
+            disabled
+            data-i18n-aria="media.micOff"
+            aria-label="Ligar microfone"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v3"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span class="slash" aria-hidden="true"></span>
+          </button>
 
-          <div class="btn-row">
-            <button id="btnConnect" class="primary">Conectar</button>
-            <button id="btnHangup" class="danger" disabled>Encerrar</button>
-          </div>
+          <button
+            id="btnToggleCam"
+            class="ctrl"
+            type="button"
+            disabled
+            data-i18n-aria="media.camOff"
+            aria-label="Ligar câmera"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect
+                x="3"
+                y="7"
+                width="12.5"
+                height="10"
+                rx="2.2"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M15.5 11.2 21 8.4v7.2l-5.5-2.8v-2.6Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="slash" aria-hidden="true"></span>
+          </button>
 
-          <div class="btn-row">
-            <button id="btnToggleMic" disabled>Mic: ligado</button>
-            <button id="btnToggleCam" disabled>Câm: ligada</button>
-          </div>
+          <button
+            id="btnVideoQuality"
+            class="ctrl quality-btn"
+            type="button"
+            disabled
+            data-i18n-aria="video.openPanel"
+            aria-label="Qualidade de vídeo"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect
+                x="3"
+                y="5"
+                width="18"
+                height="14"
+                rx="2.2"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M8 15h8M10 11h4"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span class="quality-badge" id="qualityBadge" aria-hidden="true">A</span>
+          </button>
 
-          <fieldset class="robot-controls">
-            <legend>Controle do robô</legend>
-            <button
-              id="btnSendCommand"
-              class="primary command"
-              type="button"
-              data-control="beep"
-              disabled
-            >
-              Enviar comando
-            </button>
-            <p class="hint">
-              Simula o operador controlando o robô. O celular toca um áudio ao
-              receber.
-            </p>
-          </fieldset>
+          <button
+            id="btnSendCommand"
+            class="ctrl"
+            type="button"
+            disabled
+            data-control="beep"
+            data-i18n-aria="media.beep"
+            aria-label="Enviar comando ao robô"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M6.5 10.5a5.5 5.5 0 0 1 11 0c0 3.2 1.2 4.4 1.2 4.4H5.3s1.2-1.2 1.2-4.4Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M10 18.2a2 2 0 0 0 4 0"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
 
-          <fieldset id="movementControls" class="movement-controls" disabled>
-            <legend>Movimentação do robô</legend>
-            <div class="btn-row">
-              <button
-                type="button"
-                data-control="forward"
-                title="Frente (W / ↑)"
-              >
-                ↑
-              </button>
-            </div>
-            <div class="btn-row">
-              <button
-                type="button"
-                data-control="left"
-                title="Girar à esquerda (A / ←)"
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                data-control="stop"
-                class="danger"
-                title="Parar (Espaço)"
-              >
-                ■
-              </button>
-              <button
-                type="button"
-                data-control="right"
-                title="Girar à direita (D / →)"
-              >
-                →
-              </button>
-            </div>
-            <div class="btn-row">
-              <button type="button" data-control="backward" title="Ré (S / ↓)">
-                ↓
-              </button>
-            </div>
-            <p class="hint">
-              Use os botões ou o teclado (WASD / Setas / Espaço).
-            </p>
-          </fieldset>
+          <button
+            id="btnHangup"
+            class="ctrl hangup"
+            type="button"
+            disabled
+            data-i18n-aria="call.hangup"
+            aria-label="Encerrar"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"
+              />
+            </svg>
+          </button>
+        </footer>
 
-          <div class="meta">
+        <div
+          id="qualityPanel"
+          class="quality-panel hidden"
+          role="dialog"
+          aria-modal="true"
+          data-i18n-aria="video.panelTitle"
+          aria-label="Qualidade do vídeo"
+        >
+          <div class="quality-panel-head">
             <div>
-              <span>Operador</span><strong id="selfState">offline</strong>
+              <h2 class="quality-title" data-i18n="video.panelTitle">Qualidade do vídeo</h2>
+              <p class="quality-subtitle" data-i18n="video.panelHint">
+                Arraste para ajustar. Maior qualidade usa mais banda.
+              </p>
             </div>
-            <div><span>Robô</span><strong id="robotState">offline</strong></div>
-            <div><span>WebRTC</span><strong id="rtcState">idle</strong></div>
+            <button
+              type="button"
+              id="btnCloseQuality"
+              class="quality-close"
+              data-i18n-aria="video.openPanel"
+              aria-label="Fechar"
+            >
+              ×
+            </button>
           </div>
-        </aside>
-      </main>
+
+          <p class="quality-value" id="qualityValueLabel">Auto</p>
+
+          <div
+            id="qualitySlider"
+            class="quality-slider"
+            tabindex="0"
+            role="slider"
+            aria-valuemin="0"
+            aria-valuemax="4"
+            aria-valuenow="0"
+            data-i18n-aria="video.panelTitle"
+            aria-label="Qualidade do vídeo"
+          >
+            <div class="quality-track" aria-hidden="true">
+              <div class="quality-track-fill" id="qualityTrackFill"></div>
+            </div>
+            <div class="quality-thumb" id="qualityThumb" aria-hidden="true"></div>
+          </div>
+
+          <div class="quality-ticks" id="qualityTicks" role="listbox"></div>
+
+          <p class="quality-hint" id="qualityHintLabel"></p>
+          <p class="quality-stats" id="qualityStatsLabel" data-i18n="video.statsUnknown">
+            Resolução recebida: aguardando…
+          </p>
+
+          <button
+            type="button"
+            id="btnResetVideo"
+            class="quality-reset"
+            data-i18n="video.resetConnection"
+          >
+            Reconectar vídeo
+          </button>
+        </div>
+
+        <div id="endedOverlay" class="ended-overlay hidden">
+          <p data-i18n="call.ended">Chamada encerrada</p>
+          <button
+            id="btnRejoin"
+            class="rejoin"
+            type="button"
+            data-i18n="call.rejoin"
+          >
+            Entrar novamente
+          </button>
+        </div>
+      </div>
     </div>
 
+    <script src="i18n.js"></script>
+    <script src="joystick.js"></script>
+    <script src="video-quality.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
