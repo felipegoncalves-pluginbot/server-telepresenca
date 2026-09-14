@@ -1,90 +1,131 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Telepresença — Operador</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="/socket.io/socket.io.js"></script>
-</head>
-<body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark"></span>
-        <div>
-          <h1>Telepresença</h1>
-          <p>Painel do operador</p>
-        </div>
-      </div>
-      <div class="status-chip" id="statusChip">Desconectado</div>
-    </header>
-
-    <main class="stage">
-      <section class="remote-panel">
-        <video id="remoteVideo" autoplay playsinline></video>
-        <div class="remote-overlay" id="remotePlaceholder">
-          <p>Aguardando o robô (celular)…</p>
-        </div>
-        <div class="local-pip">
-          <video id="localVideo" autoplay playsinline muted></video>
-        </div>
-      </section>
-
-      <aside class="controls">
-        <label>
-          Sala
-          <input id="roomId" type="text" value="telepresenca" autocomplete="off" />
-        </label>
-
-        <div class="btn-row">
-          <button id="btnConnect" class="primary">Conectar</button>
-          <button id="btnHangup" class="danger" disabled>Encerrar</button>
-        </div>
-
-        <div class="btn-row">
-          <button id="btnToggleMic" disabled>Mic: ligado</button>
-          <button id="btnToggleCam" disabled>Câm: ligada</button>
-        </div>
-
-        <fieldset class="robot-controls">
-          <legend>Controle do robô</legend>
-          <button
-            id="btnSendCommand"
-            class="primary command"
-            type="button"
-            data-control="beep"
-            disabled
-          >
-            Enviar comando
-          </button>
-          <p class="hint">Simula o operador controlando o robô. O celular toca um áudio ao receber.</p>
-        </fieldset>
-
-        <fieldset class="future-controls" disabled>
-          <legend>Movimentação (futuro)</legend>
-          <div class="btn-row">
-            <button type="button" data-control="forward">↑</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Telepresença — Operador</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <div>
+            <h1>Telepresença</h1>
+            <p>Painel do operador</p>
           </div>
-          <div class="btn-row">
-            <button type="button" data-control="left">←</button>
-            <button type="button" data-control="stop">■</button>
-            <button type="button" data-control="right">→</button>
-          </div>
-          <div class="btn-row">
-            <button type="button" data-control="backward">↓</button>
-          </div>
-        </fieldset>
-
-        <div class="meta">
-          <div><span>Operador</span><strong id="selfState">offline</strong></div>
-          <div><span>Robô</span><strong id="robotState">offline</strong></div>
-          <div><span>WebRTC</span><strong id="rtcState">idle</strong></div>
         </div>
-      </aside>
-    </main>
-  </div>
+        <div class="status-chip" id="statusChip">Desconectado</div>
+      </header>
 
-  <script src="app.js"></script>
-</body>
+      <main class="stage">
+        <section class="remote-panel">
+          <video id="remoteVideo" autoplay playsinline muted></video>
+          <button id="btnUnmuteAudio" class="unmute-floating hidden" type="button">🔊 Ativar Som</button>
+          <div class="remote-overlay" id="remotePlaceholder">
+            <p>Aguardando o robô (celular)…</p>
+          </div>
+          <div class="local-pip">
+            <video id="localVideo" autoplay playsinline muted></video>
+          </div>
+        </section>
+
+        <aside class="controls">
+          <label>
+            Sala
+            <input
+              id="roomId"
+              type="text"
+              value="telepresenca"
+              autocomplete="off"
+            />
+          </label>
+
+          <div class="btn-row">
+            <button id="btnConnect" class="primary">Conectar</button>
+            <button id="btnHangup" class="danger" disabled>Encerrar</button>
+          </div>
+
+          <div class="btn-row">
+            <button id="btnToggleMic" disabled>Mic: ligado</button>
+            <button id="btnToggleCam" disabled>Câm: ligada</button>
+          </div>
+
+          <fieldset class="robot-controls">
+            <legend>Controle do robô</legend>
+            <button
+              id="btnSendCommand"
+              class="primary command"
+              type="button"
+              data-control="beep"
+              disabled
+            >
+              Enviar comando
+            </button>
+            <p class="hint">
+              Simula o operador controlando o robô. O celular toca um áudio ao
+              receber.
+            </p>
+          </fieldset>
+
+          <fieldset id="movementControls" class="movement-controls" disabled>
+            <legend>Movimentação do robô</legend>
+            <div class="btn-row">
+              <button
+                type="button"
+                data-control="forward"
+                title="Frente (W / ↑)"
+              >
+                ↑
+              </button>
+            </div>
+            <div class="btn-row">
+              <button
+                type="button"
+                data-control="left"
+                title="Girar à esquerda (A / ←)"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                data-control="stop"
+                class="danger"
+                title="Parar (Espaço)"
+              >
+                ■
+              </button>
+              <button
+                type="button"
+                data-control="right"
+                title="Girar à direita (D / →)"
+              >
+                →
+              </button>
+            </div>
+            <div class="btn-row">
+              <button type="button" data-control="backward" title="Ré (S / ↓)">
+                ↓
+              </button>
+            </div>
+            <p class="hint">
+              Use os botões ou o teclado (WASD / Setas / Espaço).
+            </p>
+          </fieldset>
+
+          <div class="meta">
+            <div>
+              <span>Operador</span><strong id="selfState">offline</strong>
+            </div>
+            <div><span>Robô</span><strong id="robotState">offline</strong></div>
+            <div><span>WebRTC</span><strong id="rtcState">idle</strong></div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
 </html>

@@ -109,6 +109,35 @@ body {
   min-height: 420px;
 }
 
+.unmute-floating {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+  background: rgba(43, 176, 166, 0.9);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.unmute-floating:hover {
+  background: rgba(43, 176, 166, 1);
+  transform: scale(1.04);
+}
+
+.unmute-floating.hidden {
+  display: none;
+}
+
 #remoteVideo {
   width: 100%;
   height: 100%;
@@ -122,7 +151,11 @@ body {
   inset: 0;
   display: grid;
   place-items: center;
-  background: linear-gradient(180deg, rgba(15, 20, 25, 0.2), rgba(15, 20, 25, 0.75));
+  background: linear-gradient(
+    180deg,
+    rgba(15, 20, 25, 0.2),
+    rgba(15, 20, 25, 0.75)
+  );
   color: var(--muted);
   pointer-events: none;
 }
@@ -199,7 +232,10 @@ button {
   padding: 11px 12px;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease,
+    opacity 0.12s ease;
 }
 
 button:hover:not(:disabled) {
@@ -225,6 +261,7 @@ button.danger {
 }
 
 .robot-controls,
+.movement-controls,
 .future-controls {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -232,11 +269,18 @@ button.danger {
   margin: 0;
 }
 
-.future-controls {
-  border-style: dashed;
+.movement-controls .btn-row {
+  margin-bottom: 6px;
+}
+
+.movement-controls button {
+  min-width: 46px;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .robot-controls legend,
+.movement-controls legend,
 .future-controls legend {
   padding: 0 6px;
   color: var(--muted);

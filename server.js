@@ -45,6 +45,7 @@ function roomState(roomId) {
     roomId,
     operator: Boolean(room.operator),
     robot: Boolean(room.robot),
+    robotCapabilities: room.robotCapabilities || null,
   };
 }
 
@@ -76,7 +77,7 @@ function leaveRoom(socket) {
 io.on('connection', (socket) => {
   console.log(`[+] connected ${socket.id}`);
 
-  socket.on('join', ({ roomId, role }, ack) => {
+  socket.on('join', ({ roomId, role, capabilities }, ack) => {
     try {
       if (!roomId || typeof roomId !== 'string') {
         throw new Error('roomId inválido');
@@ -89,6 +90,9 @@ io.on('connection', (socket) => {
       leaveRoom(socket);
 
       const room = rooms.get(roomId) || {};
+      if (effectiveRole === 'robot' && capabilities && typeof capabilities === 'object') {
+        room.robotCapabilities = capabilities;
+      }
       if (room[effectiveRole] && room[effectiveRole] !== socket.id) {
         const previous = io.sockets.sockets.get(room[effectiveRole]);
         if (previous) {
@@ -112,10 +116,17 @@ io.on('connection', (socket) => {
         roomId,
         role: effectiveRole,
         peerPresent: Boolean(peerId),
+        robotCapabilities:
+          effectiveRole === 'operator' ? room.robotCapabilities || null : undefined,
       });
 
       if (peerId) {
-        socket.to(peerId).emit('peer-joined', { role: effectiveRole, socketId: socket.id });
+        socket.to(peerId).emit('peer-joined', {
+          role: effectiveRole,
+          socketId: socket.id,
+          robotCapabilities:
+            effectiveRole === 'robot' ? room.robotCapabilities || null : undefined,
+        });
       }
 
       io.to(roomId).emit('room-state', roomState(roomId));
