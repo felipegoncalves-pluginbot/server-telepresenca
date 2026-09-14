@@ -50,15 +50,12 @@
     btnToggleCam: document.getElementById("btnToggleCam"),
     btnVideoQuality: document.getElementById("btnVideoQuality"),
     btnCloseQuality: document.getElementById("btnCloseQuality"),
-    btnResetVideo: document.getElementById("btnResetVideo"),
     qualityPanel: document.getElementById("qualityPanel"),
     qualitySlider: document.getElementById("qualitySlider"),
     qualityThumb: document.getElementById("qualityThumb"),
     qualityTrackFill: document.getElementById("qualityTrackFill"),
     qualityTicks: document.getElementById("qualityTicks"),
     qualityValueLabel: document.getElementById("qualityValueLabel"),
-    qualityHintLabel: document.getElementById("qualityHintLabel"),
-    qualityStatsLabel: document.getElementById("qualityStatsLabel"),
     qualityBadge: document.getElementById("qualityBadge"),
     btnSendCommand: document.getElementById("btnSendCommand"),
     localVideo: document.getElementById("localVideo"),
@@ -108,7 +105,7 @@
   let robotCapabilities = null;
   let videoCapabilities = VQ ? VQ.resolveVideoCapabilities(null) : null;
   let qualityPanel = null;
-  let qualityStatsTimer = null;
+  let qualityApplying = false;
   let activeMovement = null;
   let movementHeartbeat = null;
   let mediaRequest = null;
@@ -285,18 +282,25 @@
   }
 
   async function handleQualityPresetChange(preset) {
-    if (!preset) return;
-    VQ.savePresetId(preset.id);
-    updateQualityBadge(preset);
-    if (els.qualityTrackFill && qualityPanel) {
-      const presets = videoCapabilities?.presets || VQ.DEFAULT_PRESETS;
-      const index = presets.findIndex((item) => item.id === preset.id);
-      const ratio =
-        presets.length <= 1 ? 0 : Math.max(0, index) / (presets.length - 1);
-      els.qualityTrackFill.style.width = `${ratio * 100}%`;
+    if (!preset || qualityApplying) return;
+    qualityApplying = true;
+    try {
+      VQ.savePresetId(preset.id);
+      updateQualityBadge(preset);
+      if (els.qualityTrackFill && qualityPanel) {
+        const presets = videoCapabilities?.presets || VQ.DEFAULT_PRESETS;
+        const index = presets.findIndex((item) => item.id === preset.id);
+        const ratio =
+          presets.length <= 1 ? 0 : Math.max(0, index) / (presets.length - 1);
+        els.qualityTrackFill.style.width = `${ratio * 100}%`;
+      }
+      sendVideoQualityToRobot(preset.id);
+      if (connected && socket) {
+        await resetVideoConnection();
+      }
+    } finally {
+      qualityApplying = false;
     }
-    sendVideoQualityToRobot(preset.id);
-    await applyLocalVideoQuality(preset);
   }
 
   async function resetVideoConnection() {
@@ -310,26 +314,6 @@
     if (preset) {
       sendVideoQualityToRobot(preset.id);
       await applyLocalVideoQuality(preset);
-    }
-  }
-
-  function startQualityStatsPolling() {
-    stopQualityStatsPolling();
-    qualityStatsTimer = setInterval(async () => {
-      if (!pc || !qualityPanel) return;
-      try {
-        const stats = await VQ.readIncomingVideoStats(pc);
-        qualityPanel.updateStats(stats);
-      } catch (_) {
-        /* ignore */
-      }
-    }, 1500);
-  }
-
-  function stopQualityStatsPolling() {
-    if (qualityStatsTimer) {
-      clearInterval(qualityStatsTimer);
-      qualityStatsTimer = null;
     }
   }
 
@@ -347,13 +331,10 @@
     els.btnToggleCam.disabled = !isConnected;
     els.btnVideoQuality.disabled = !isConnected;
     els.btnSendCommand.disabled = !isConnected;
-    if (els.btnResetVideo) els.btnResetVideo.disabled = !isConnected;
     if (joystick) joystick.setEnabled(isConnected);
     if (isConnected) {
       showEnded(false);
-      startQualityStatsPolling();
     } else {
-      stopQualityStatsPolling();
       setQualityPanelOpen(false);
     }
   }
@@ -668,7 +649,6 @@
 
   function disconnect({ ended = true } = {}) {
     stopMovement(true);
-    stopQualityStatsPolling();
     setQualityPanelOpen(false);
     if (socket) {
       socket.emit("hangup");
@@ -769,16 +749,10 @@
         thumb: els.qualityThumb,
         ticks: els.qualityTicks,
         valueLabel: els.qualityValueLabel,
-        hintLabel: els.qualityHintLabel,
-        statsLabel: els.qualityStatsLabel,
-        resetButton: els.btnResetVideo,
         closeButton: els.btnCloseQuality,
         t,
         onPresetChange(preset) {
           handleQualityPresetChange(preset).catch((err) => console.error(err));
-        },
-        onResetConnection() {
-          resetVideoConnection().catch((err) => console.error(err));
         },
       });
       const initialPreset = qualityPanel.setPresets(

@@ -1,11 +1,10 @@
 (() => {
-  const STORAGE_KEY = "telepresenca.videoQuality";
+  const STORAGE_KEY = "telepresenca.videoQuality.v2";
 
   const DEFAULT_PRESETS = [
     {
       id: "auto",
       labelKey: "video.preset.auto",
-      hintKey: "video.preset.autoHint",
       width: 0,
       height: 0,
       fps: 0,
@@ -15,7 +14,6 @@
     {
       id: "low",
       labelKey: "video.preset.low",
-      hintKey: "video.preset.lowHint",
       width: 640,
       height: 360,
       fps: 15,
@@ -25,7 +23,6 @@
     {
       id: "mid",
       labelKey: "video.preset.mid",
-      hintKey: "video.preset.midHint",
       width: 854,
       height: 480,
       fps: 24,
@@ -35,7 +32,6 @@
     {
       id: "high",
       labelKey: "video.preset.high",
-      hintKey: "video.preset.highHint",
       width: 1280,
       height: 720,
       fps: 30,
@@ -45,7 +41,6 @@
     {
       id: "max",
       labelKey: "video.preset.max",
-      hintKey: "video.preset.maxHint",
       width: 1280,
       height: 720,
       fps: 30,
@@ -65,7 +60,6 @@
     return {
       id,
       labelKey: raw.labelKey || `video.preset.${id}`,
-      hintKey: raw.hintKey || `video.preset.${id}Hint`,
       width: Number(raw.width) || 0,
       height: Number(raw.height) || 0,
       fps: Number(raw.fps) || 0,
@@ -88,12 +82,12 @@
     const defaultPreset =
       typeof video?.defaultPreset === "string" && video.defaultPreset
         ? video.defaultPreset
-        : "auto";
+        : "high";
 
     const hasPreset = presets.some((item) => item.id === defaultPreset);
     return {
       presets,
-      defaultPreset: hasPreset ? defaultPreset : presets[0]?.id || "auto",
+      defaultPreset: hasPreset ? defaultPreset : presets[0]?.id || "high",
       hardwareEncoder: Boolean(video?.hardwareEncoder),
       adaptiveSupported: video?.adaptiveSupported !== false,
     };
@@ -106,7 +100,7 @@
     } catch (_) {
       /* ignore */
     }
-    return fallbackId;
+    return fallbackId || "high";
   }
 
   function savePresetId(presetId) {
@@ -148,26 +142,6 @@
     return true;
   }
 
-  async function readIncomingVideoStats(pc) {
-    if (!pc) return null;
-    const report = await pc.getStats();
-    let inbound = null;
-    report.forEach((entry) => {
-      if (entry.type === "inbound-rtp" && entry.kind === "video") {
-        inbound = entry;
-      }
-    });
-    if (!inbound) return null;
-    return {
-      width: inbound.frameWidth || 0,
-      height: inbound.frameHeight || 0,
-      fps: Math.round(inbound.framesPerSecond || 0),
-      bitrateKbps: inbound.bytesReceived
-        ? Math.round((inbound.bytesReceived * 8) / 1000)
-        : 0,
-    };
-  }
-
   function createVideoQualityPanel(options) {
     const {
       root,
@@ -175,19 +149,16 @@
       thumb,
       ticks,
       valueLabel,
-      hintLabel,
-      statsLabel,
-      resetButton,
       closeButton,
       t,
       onPresetChange,
-      onResetConnection,
     } = options;
 
     let presets = DEFAULT_PRESETS.map(clonePreset);
     let selectedIndex = 0;
     let dragging = false;
     let panelOpen = false;
+    let commitIndex = 0;
 
     function presetByIndex(index) {
       return presets[Math.max(0, Math.min(presets.length - 1, index))];
@@ -202,18 +173,16 @@
       const preset = presetByIndex(selectedIndex);
       if (valueLabel) {
         valueLabel.textContent = t(preset.labelKey);
-        valueLabel.dataset.i18n = preset.labelKey;
-      }
-      if (hintLabel) {
-        hintLabel.textContent = t(preset.hintKey);
-        hintLabel.dataset.i18n = preset.hintKey;
       }
       if (ticks) {
         ticks.querySelectorAll("[data-index]").forEach((node) => {
           const idx = Number(node.getAttribute("data-index"));
           node.classList.toggle("is-active", idx === selectedIndex);
           const tickPreset = presetByIndex(idx);
-          node.setAttribute("aria-selected", idx === selectedIndex ? "true" : "false");
+          node.setAttribute(
+            "aria-selected",
+            idx === selectedIndex ? "true" : "false",
+          );
           const label = node.querySelector(".quality-tick-label");
           if (label) {
             label.textContent = t(tickPreset.labelKey);
@@ -232,7 +201,10 @@
           t("video.currentQuality", { quality: t(preset.labelKey) }),
         );
         slider.setAttribute("aria-valuenow", String(selectedIndex));
-        slider.setAttribute("aria-valuemax", String(Math.max(presets.length - 1, 0)));
+        slider.setAttribute(
+          "aria-valuemax",
+          String(Math.max(presets.length - 1, 0)),
+        );
       }
     }
 
@@ -245,27 +217,29 @@
         button.className = "quality-tick";
         button.dataset.index = String(index);
         button.setAttribute("role", "option");
-        button.setAttribute("aria-selected", index === selectedIndex ? "true" : "false");
+        button.setAttribute(
+          "aria-selected",
+          index === selectedIndex ? "true" : "false",
+        );
         button.innerHTML = `<span class="quality-tick-mark" aria-hidden="true"></span><span class="quality-tick-label" data-i18n="${preset.labelKey}"></span>`;
         button.addEventListener("click", () => {
-          selectIndex(index, { emit: true });
+          selectIndex(index, { commit: true });
         });
         ticks.appendChild(button);
       });
       refreshLabels();
     }
 
-    function selectIndex(index, { emit = true } = {}) {
+    function selectIndex(index, { commit = false } = {}) {
       const next = Math.max(0, Math.min(presets.length - 1, index));
-      if (next === selectedIndex && !emit) {
-        refreshLabels();
-        return presetByIndex(selectedIndex);
-      }
       selectedIndex = next;
       refreshLabels();
       const preset = presetByIndex(selectedIndex);
-      if (emit && typeof onPresetChange === "function") {
-        onPresetChange(preset, selectedIndex);
+      if (commit && commitIndex !== selectedIndex) {
+        commitIndex = selectedIndex;
+        if (typeof onPresetChange === "function") {
+          onPresetChange(preset, selectedIndex);
+        }
       }
       return preset;
     }
@@ -279,8 +253,9 @@
         Array.isArray(nextPresets) && nextPresets.length > 0
           ? nextPresets.map(clonePreset)
           : DEFAULT_PRESETS.map(clonePreset);
-      const saved = loadSavedPresetId(defaultPresetId || "auto");
+      const saved = loadSavedPresetId(defaultPresetId || "high");
       selectedIndex = indexOfPresetId(saved);
+      commitIndex = selectedIndex;
       renderTicks();
       return presetByIndex(selectedIndex);
     }
@@ -292,21 +267,6 @@
 
     function isPanelOpen() {
       return panelOpen;
-    }
-
-    function updateStats(stats) {
-      if (!statsLabel) return;
-      if (!stats || !stats.height) {
-        statsLabel.textContent = t("video.statsUnknown");
-        statsLabel.dataset.i18n = "video.statsUnknown";
-        return;
-      }
-      statsLabel.textContent = t("video.statsLive", {
-        width: stats.width,
-        height: stats.height,
-        fps: stats.fps || "–",
-      });
-      statsLabel.dataset.i18n = "video.statsLive";
     }
 
     function pointerToIndex(clientX) {
@@ -321,53 +281,48 @@
     function bindSlider() {
       if (!slider || !thumb) return;
 
-      const onPointerDown = (event) => {
+      slider.addEventListener("pointerdown", (event) => {
         dragging = true;
         slider.setPointerCapture(event.pointerId);
-        selectIndex(pointerToIndex(event.clientX), { emit: true });
-      };
+        selectIndex(pointerToIndex(event.clientX), { commit: false });
+      });
 
-      const onPointerMove = (event) => {
+      slider.addEventListener("pointermove", (event) => {
         if (!dragging) return;
-        selectIndex(pointerToIndex(event.clientX), { emit: true });
-      };
+        selectIndex(pointerToIndex(event.clientX), { commit: false });
+      });
 
-      const onPointerUp = (event) => {
+      const finishDrag = (event) => {
+        if (!dragging) return;
         dragging = false;
         try {
           slider.releasePointerCapture(event.pointerId);
         } catch (_) {
           /* ignore */
         }
+        selectIndex(pointerToIndex(event.clientX), { commit: true });
       };
 
-      slider.addEventListener("pointerdown", onPointerDown);
-      slider.addEventListener("pointermove", onPointerMove);
-      slider.addEventListener("pointerup", onPointerUp);
-      slider.addEventListener("pointercancel", onPointerUp);
+      slider.addEventListener("pointerup", finishDrag);
+      slider.addEventListener("pointercancel", finishDrag);
 
       slider.addEventListener("keydown", (event) => {
         if (event.key === "ArrowRight" || event.key === "ArrowUp") {
           event.preventDefault();
-          selectIndex(selectedIndex + 1, { emit: true });
+          selectIndex(selectedIndex + 1, { commit: true });
         } else if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
           event.preventDefault();
-          selectIndex(selectedIndex - 1, { emit: true });
+          selectIndex(selectedIndex - 1, { commit: true });
         } else if (event.key === "Home") {
           event.preventDefault();
-          selectIndex(0, { emit: true });
+          selectIndex(0, { commit: true });
         } else if (event.key === "End") {
           event.preventDefault();
-          selectIndex(presets.length - 1, { emit: true });
+          selectIndex(presets.length - 1, { commit: true });
         }
       });
     }
 
-    if (resetButton) {
-      resetButton.addEventListener("click", () => {
-        if (typeof onResetConnection === "function") onResetConnection();
-      });
-    }
     if (closeButton) {
       closeButton.addEventListener("click", () => setPanelOpen(false));
     }
@@ -384,7 +339,6 @@
       },
       setPanelOpen,
       isPanelOpen,
-      updateStats,
       refreshLabels,
     };
   }
@@ -396,7 +350,6 @@
     loadSavedPresetId,
     savePresetId,
     applyOutgoingVideoQuality,
-    readIncomingVideoStats,
     createVideoQualityPanel,
   };
 })();

@@ -241,7 +241,7 @@
                 stroke-linecap="round"
               />
             </svg>
-            <span class="quality-badge" id="qualityBadge" aria-hidden="true">A</span>
+            <span class="quality-badge" id="qualityBadge" aria-hidden="true">H</span>
           </button>
 
           <button
@@ -295,24 +295,20 @@
           aria-label="Qualidade do vídeo"
         >
           <div class="quality-panel-head">
-            <div>
-              <h2 class="quality-title" data-i18n="video.panelTitle">Qualidade do vídeo</h2>
-              <p class="quality-subtitle" data-i18n="video.panelHint">
-                Arraste para ajustar. Maior qualidade usa mais banda.
-              </p>
-            </div>
+            <h2 class="quality-title">
+              <span data-i18n="video.panelTitle">Qualidade</span>
+              <span class="quality-sep" aria-hidden="true">·</span>
+              <span id="qualityValueLabel">Alta</span>
+            </h2>
             <button
               type="button"
               id="btnCloseQuality"
               class="quality-close"
-              data-i18n-aria="video.openPanel"
               aria-label="Fechar"
             >
               ×
             </button>
           </div>
-
-          <p class="quality-value" id="qualityValueLabel">Auto</p>
 
           <div
             id="qualitySlider"
@@ -321,7 +317,7 @@
             role="slider"
             aria-valuemin="0"
             aria-valuemax="4"
-            aria-valuenow="0"
+            aria-valuenow="3"
             data-i18n-aria="video.panelTitle"
             aria-label="Qualidade do vídeo"
           >
@@ -332,20 +328,6 @@
           </div>
 
           <div class="quality-ticks" id="qualityTicks" role="listbox"></div>
-
-          <p class="quality-hint" id="qualityHintLabel"></p>
-          <p class="quality-stats" id="qualityStatsLabel" data-i18n="video.statsUnknown">
-            Resolução recebida: aguardando…
-          </p>
-
-          <button
-            type="button"
-            id="btnResetVideo"
-            class="quality-reset"
-            data-i18n="video.resetConnection"
-          >
-            Reconectar vídeo
-          </button>
         </div>
 
         <div id="endedOverlay" class="ended-overlay hidden">

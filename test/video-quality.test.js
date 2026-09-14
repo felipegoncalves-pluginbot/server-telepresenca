@@ -30,10 +30,10 @@ assert.strictEqual(caps.presets.length, 2);
 
 const fallback = VQ.resolveVideoCapabilities(null);
 assert.strictEqual(fallback.presets.length, 5);
-assert.strictEqual(fallback.defaultPreset, "auto");
+assert.strictEqual(fallback.defaultPreset, "high");
 
 VQ.savePresetId("mid");
-assert.strictEqual(VQ.loadSavedPresetId("auto"), "mid");
+assert.strictEqual(VQ.loadSavedPresetId("high"), "mid");
 
 const normalized = VQ.resolveVideoCapabilities({
   video: { presets: [{ id: "low", width: 640, height: 360, fps: 15, maxBitrateKbps: 800 }] },

@@ -41,20 +41,11 @@
   "lang.es": "Español",
   "lang.fr": "Français",
   "video.openPanel": "Qualidade de vídeo",
-  "video.panelTitle": "Qualidade do vídeo",
-  "video.panelHint": "Arraste para ajustar. Maior qualidade usa mais banda.",
+  "video.panelTitle": "Qualidade",
   "video.currentQuality": "Qualidade: {{quality}}",
-  "video.resetConnection": "Reconectar vídeo",
-  "video.statsUnknown": "Resolução recebida: aguardando…",
-  "video.statsLive": "Recebendo {{width}}×{{height}} · {{fps}} fps",
   "video.preset.auto": "Auto",
-  "video.preset.autoHint": "Adapta à rede e ao robô.",
-  "video.preset.low": "Economia",
-  "video.preset.lowHint": "360p · ~0,8 Mbps · ideal para Wi‑Fi fraco.",
+  "video.preset.low": "Eco",
   "video.preset.mid": "Padrão",
-  "video.preset.midHint": "480p · ~1,5 Mbps · equilíbrio.",
   "video.preset.high": "Alta",
-  "video.preset.highHint": "720p · ~2,5 Mbps · recomendado.",
-  "video.preset.max": "Máxima",
-  "video.preset.maxHint": "720p · ~4,5 Mbps · melhor nitidez possível."
+  "video.preset.max": "Máx"
 }
