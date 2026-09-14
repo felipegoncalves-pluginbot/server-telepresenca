@@ -106,6 +106,10 @@
   let videoCapabilities = VQ ? VQ.resolveVideoCapabilities(null) : null;
   let qualityPanel = null;
   let qualityApplying = false;
+  let lastAppliedCaptureKey = null;
+  let offerRetryTimer = null;
+  let offerRetryCount = 0;
+  const MAX_OFFER_RETRIES = 2;
   let activeMovement = null;
   let movementHeartbeat = null;
   let mediaRequest = null;
@@ -272,6 +276,44 @@
     socket.emit("video-quality", { presetId });
   }
 
+  function hasRemoteVideoTrack() {
+    const stream = els.remoteVideo?.srcObject;
+    if (!stream) return false;
+    return stream.getVideoTracks().some((track) => track.readyState === "live");
+  }
+
+  function clearOfferRetryTimer() {
+    if (offerRetryTimer) {
+      clearTimeout(offerRetryTimer);
+      offerRetryTimer = null;
+    }
+  }
+
+  function clearOfferRetry() {
+    clearOfferRetryTimer();
+    offerRetryCount = 0;
+  }
+
+  async function beginCallWithRobot() {
+    const preset = qualityPanel?.getSelectedPreset();
+    if (preset) {
+      sendVideoQualityToRobot(preset.id);
+    }
+    await startCallAsOfferer();
+    scheduleOfferRetryIfNeeded();
+  }
+
+  function scheduleOfferRetryIfNeeded() {
+    clearOfferRetryTimer();
+    offerRetryTimer = setTimeout(async () => {
+      if (!connected || !pc || hasRemoteVideoTrack()) return;
+      if (offerRetryCount >= MAX_OFFER_RETRIES) return;
+      offerRetryCount += 1;
+      console.warn("Sem vídeo do robô; reenviando offer.", offerRetryCount);
+      await beginCallWithRobot();
+    }, 4500);
+  }
+
   async function applyLocalVideoQuality(preset) {
     if (!pc || !VQ || !preset) return;
     try {
@@ -296,7 +338,14 @@
       }
       sendVideoQualityToRobot(preset.id);
       if (connected && socket) {
-        await resetVideoConnection();
+        const captureKey = VQ.captureFormatKey(preset);
+        const needsRenegotiation = captureKey !== lastAppliedCaptureKey;
+        if (needsRenegotiation) {
+          await resetVideoConnection();
+          lastAppliedCaptureKey = captureKey;
+        } else {
+          await applyLocalVideoQuality(preset);
+        }
       }
     } finally {
       qualityApplying = false;
@@ -314,6 +363,7 @@
     if (preset) {
       sendVideoQualityToRobot(preset.id);
       await applyLocalVideoQuality(preset);
+      lastAppliedCaptureKey = VQ.captureFormatKey(preset);
     }
   }
 
@@ -410,6 +460,7 @@
   }
 
   function cleanupPeer() {
+    clearOfferRetry();
     if (pc) {
       pc.onicecandidate = null;
       pc.ontrack = null;
@@ -476,10 +527,12 @@
     };
 
     pc.ontrack = (event) => {
+      if (event.track?.kind !== "video") return;
       const [remoteStream] = event.streams;
       els.remoteVideo.srcObject = remoteStream;
       els.remotePlaceholder.classList.add("hidden");
       setStatus("status.live", "live");
+      clearOfferRetry();
       playRemoteWithSound();
     };
 
@@ -497,6 +550,7 @@
         if (preset) {
           sendVideoQualityToRobot(preset.id);
           applyLocalVideoQuality(preset).catch((err) => console.warn(err));
+          lastAppliedCaptureKey = VQ.captureFormatKey(preset);
         }
       }
     };
@@ -600,7 +654,7 @@
         applyRobotCapabilities(payload.robotCapabilities);
       }
       if (payload.peerPresent) {
-        await startCallAsOfferer();
+        await beginCallWithRobot();
       }
     });
 
@@ -608,7 +662,7 @@
       if (payload?.robotCapabilities) {
         applyRobotCapabilities(payload.robotCapabilities);
       }
-      await startCallAsOfferer();
+      await beginCallWithRobot();
     });
 
     socket.on("peer-left", () => {

@@ -41,4 +41,7 @@ const normalized = VQ.resolveVideoCapabilities({
 assert.strictEqual(normalized.presets[0].id, "low");
 assert.strictEqual(normalized.presets[0].maxBitrateKbps, 800);
 
+assert.strictEqual(VQ.captureFormatKey({ id: "high", width: 1280, height: 720, fps: 30 }), "1280x720@30");
+assert.strictEqual(VQ.captureFormatKey({ id: "auto", adaptive: true }), "auto");
+
 console.log("video-quality ok");

@@ -111,6 +111,14 @@
     }
   }
 
+  function captureFormatKey(preset) {
+    if (!preset || preset.adaptive) return "auto";
+    const width = Number(preset.width) || 0;
+    const height = Number(preset.height) || 0;
+    const fps = Number(preset.fps) || 0;
+    return `${width}x${height}@${fps}`;
+  }
+
   async function applyOutgoingVideoQuality(pc, preset) {
     if (!pc || !preset) return false;
     const sender = pc
@@ -349,6 +357,7 @@
     resolveVideoCapabilities,
     loadSavedPresetId,
     savePresetId,
+    captureFormatKey,
     applyOutgoingVideoQuality,
     createVideoQualityPanel,
   };
