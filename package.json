@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node src/index.js",
-    "test": "node --test \"test/**/*.test.js\"",
+    "test": "node scripts/run-tests.mjs",
     "lint": "node scripts/if-node18.mjs npx eslint .",
     "lint:fix": "node scripts/if-node18.mjs npx eslint . --fix",
     "format": "prettier --write .",
@@ -25,7 +25,7 @@
     "ci": "npm run quality && npm run arch && npm run deps && npm run audit"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=16"
   },
   "dependencies": {
     "cors": "^2.8.5",

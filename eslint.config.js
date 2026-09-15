@@ -178,8 +178,9 @@ export default [
         {
           patterns: [
             {
-              group: ["**/helpers/harness.js", "**/test/run.js"],
-              message: "Use node:test. npm test discovers **/*.test.js.",
+              group: ["node:test", "**/helpers/harness.js", "**/test/run.js"],
+              message:
+                "Import { test } from ../helpers/test.js so npm test runs on Node 16. Files are discovered automatically.",
             },
           ],
         },

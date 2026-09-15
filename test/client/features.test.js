@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "../helpers/test.js";
 import { beepFeature } from "../../public/js/features/beep.js";
 import { flashlightFeature } from "../../public/js/features/flashlight.js";
 import { createLocomotionFeature } from "../../public/js/features/locomotion.js";

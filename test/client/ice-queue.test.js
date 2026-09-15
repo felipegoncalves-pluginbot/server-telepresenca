@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "../helpers/test.js";
 import { createIceQueue } from "../../public/js/webrtc/ice-queue.js";
 
 test("ICE queue holds candidates until remote description is set", async () => {

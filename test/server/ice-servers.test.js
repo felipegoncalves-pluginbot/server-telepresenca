@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "../helpers/test.js";
 import { buildIceServers } from "../../src/ice/ice-servers.js";
 import { compileSchema } from "../helpers/load-schema.js";
 

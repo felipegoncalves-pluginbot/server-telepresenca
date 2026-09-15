@@ -15,17 +15,20 @@ function reportIfMissing(context, used, program, messageId) {
 const useNodeTest = {
   meta: {
     type: "problem",
-    docs: { description: "Test files must import node:test." },
+    docs: {
+      description: "Test files must import the Node 16-compatible test helper.",
+    },
     schema: [],
     messages: {
-      missing: 'Import { test } from "node:test". Do not keep a private runner.',
+      missing:
+        'Import { test } from "../helpers/test.js". npm test discovers *.test.js on Node 16 and on current Node.',
     },
   },
   create(context) {
     let used = false;
     return {
       ImportDeclaration(node) {
-        if (node.source.value === "node:test") used = true;
+        if (/(?:^|\/)helpers\/test\.js$/.test(node.source.value)) used = true;
       },
       "Program:exit"(node) {
         reportIfMissing(context, used, node, "missing");

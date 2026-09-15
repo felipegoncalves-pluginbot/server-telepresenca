@@ -9,13 +9,21 @@ export function importLocals(node, source) {
 }
 
 /**
+ * @param {string} source
+ * @returns {boolean}
+ */
+export function isTestRunnerSource(source) {
+  return source === "node:test" || /(?:^|\/)helpers\/test\.js$/.test(String(source));
+}
+
+/**
  * @param {{ source: { value: string }, specifiers: object[] }} node
  * @returns {{ cases: Set<string>, suites: Set<string> }}
  */
 export function classifyNodeTestImport(node) {
   const cases = new Set();
   const suites = new Set();
-  if (node.source.value !== "node:test") return { cases, suites };
+  if (!isTestRunnerSource(node.source.value)) return { cases, suites };
   for (const spec of node.specifiers) {
     if (spec.type === "ImportDefaultSpecifier") {
       cases.add(spec.local.name);

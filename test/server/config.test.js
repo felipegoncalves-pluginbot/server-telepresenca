@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "../helpers/test.js";
 import { loadConfig, splitCsv } from "../../src/config.js";
 
 test("splitCsv trims and drops empties", () => {

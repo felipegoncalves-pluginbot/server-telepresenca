@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "../helpers/test.js";
 import { compileSchema, readJson } from "../helpers/load-schema.js";
 
 const validate = compileSchema("schemas/control.schema.json");

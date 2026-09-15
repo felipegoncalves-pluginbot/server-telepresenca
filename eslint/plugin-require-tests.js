@@ -22,7 +22,7 @@ const importedFromTest = {
     schema: [],
     messages: {
       missing:
-        "No test imports this module. Add test/**/*.test.js that imports '{{file}}'. npm test discovers *.test.js automatically.",
+        "No test imports this module. Add a *.test.js file that imports '{{file}}'. npm test discovers those files automatically.",
     },
   },
   create(context) {

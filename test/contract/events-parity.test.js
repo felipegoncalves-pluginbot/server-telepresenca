@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "../helpers/test.js";
 import * as clientEvents from "../../public/js/protocol/events.js";
 import {
   events as serverEvents,
