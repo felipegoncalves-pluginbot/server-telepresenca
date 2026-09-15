@@ -5,6 +5,7 @@ import {
   isBeepAvailable,
   isContinuousBackward,
   isFlashlightAvailable,
+  isHeadAvailable,
   isLocomotionAvailable,
   normalizeCapabilities,
 } from "../../public/js/protocol/capabilities.js";
@@ -30,6 +31,13 @@ test("legacy HUD stays on without capabilities", () => {
   assert.equal(isLocomotionAvailable(null), true);
   assert.equal(isBeepAvailable(null), true);
   assert.equal(isFlashlightAvailable(null), false);
+  assert.equal(isHeadAvailable(null), false);
+});
+
+test("head look is opt-in like flashlight", () => {
+  assert.equal(isHeadAvailable(cruzr), true);
+  assert.equal(isHeadAvailable(flashlightRobot), false);
+  assert.equal(isHeadAvailable({ head: { available: false } }), false);
 });
 
 test("flashlight is opt-in", () => {

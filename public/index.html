@@ -19,6 +19,17 @@
 
         <div class="vignette" aria-hidden="true"></div>
 
+        <div
+          class="head-look-layer"
+          id="headLookLayer"
+          hidden
+          data-host="head-look"
+          data-i18n-aria="head.layer"
+          aria-label="Arraste para mover a cabeça do robô"
+        >
+          <p class="head-drag-hint" data-i18n="head.look">Arraste para olhar</p>
+        </div>
+
         <div class="remote-overlay" id="remotePlaceholder">
           <div class="waiting-mark" aria-hidden="true"></div>
           <p data-i18n="status.waitingRobot">Aguardando o robô…</p>
@@ -154,6 +165,21 @@
             <span class="kbd-key" data-key="s">S</span>
             <span class="kbd-key" data-key="d">D</span>
           </div>
+        </div>
+
+        <div class="head-hud" id="headHost" hidden data-host="head">
+          <div
+            class="kbd-hint kbd-hint-head"
+            id="headKbdHint"
+            data-i18n-aria="head.hintKeyboard"
+            aria-label="Arraste a imagem para olhar. IJKL olha. Duplo clique centra."
+          >
+            <span class="kbd-key" data-key="i">I</span>
+            <span class="kbd-key" data-key="j">J</span>
+            <span class="kbd-key" data-key="k">K</span>
+            <span class="kbd-key" data-key="l">L</span>
+          </div>
+          <p class="head-hint" id="headHint"></p>
         </div>
 
         <div class="local-pip hidden" id="localPip">

@@ -53,5 +53,10 @@
     "defaultPreset": "high",
     "hardwareEncoder": true,
     "adaptiveSupported": true
+  },
+  "head": {
+    "available": true,
+    "yaw": true,
+    "pitch": true
   }
 }

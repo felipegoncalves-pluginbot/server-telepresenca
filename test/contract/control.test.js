@@ -17,6 +17,14 @@ test("namespaced flashlight actions validate", () => {
   }
 });
 
+test("namespaced head actions validate", () => {
+  assert.equal(validate({ action: "head.reset" }), true);
+  assert.equal(
+    validate({ action: "head.look", value: { yaw: 0.2, pitch: -0.1 } }),
+    true,
+  );
+});
+
 test("schema examples are valid", () => {
   for (const example of schema.examples) {
     assert.equal(validate(example), true, JSON.stringify(example));

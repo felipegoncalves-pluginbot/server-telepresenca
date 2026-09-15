@@ -23,6 +23,8 @@
     { "action": "stop" },
     { "action": "flashlight.toggle" },
     { "action": "flashlight.on" },
-    { "action": "flashlight.off" }
+    { "action": "flashlight.off" },
+    { "action": "head.look", "value": { "yaw": 0.2, "pitch": -0.1 } },
+    { "action": "head.reset" }
   ]
 }

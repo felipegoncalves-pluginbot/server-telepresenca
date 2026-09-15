@@ -1,5 +1,6 @@
 import { beepFeature } from "./features/beep.js";
 import { flashlightFeature } from "./features/flashlight.js";
+import { createHeadFeature } from "./features/head.js";
 import { createLocomotionFeature } from "./features/locomotion.js";
 import { createFeatureRegistry } from "./features/registry.js";
 import { createVideoQualityFeature, savePresetId } from "./features/video-quality.js";
@@ -52,9 +53,11 @@ export function createOperator({ els, i18n, ioClient }) {
   let callStartInFlight = false;
 
   const locomotion = createLocomotionFeature(els, t);
+  const head = createHeadFeature(els, t);
   const videoQuality = createVideoQualityFeature(els, t);
   const registry = createFeatureRegistry([
     locomotion,
+    head,
     beepFeature,
     videoQuality,
     flashlightFeature,
@@ -158,6 +161,7 @@ export function createOperator({ els, i18n, ioClient }) {
     if (els.btnVideoQuality) els.btnVideoQuality.disabled = !isConnectedFlag;
     if (els.btnSendCommand) els.btnSendCommand.disabled = !isConnectedFlag;
     locomotion.setEnabled(isConnectedFlag);
+    head.setEnabled(isConnectedFlag);
     const flashlightBtn = els.featureHost?.querySelector('[data-feature="flashlight"]');
     if (flashlightBtn) flashlightBtn.disabled = !isConnectedFlag;
     if (isConnectedFlag) {
@@ -180,6 +184,7 @@ export function createOperator({ els, i18n, ioClient }) {
     }
     lang.updateLangFlag();
     locomotion.refreshLabels();
+    head.refreshLabels();
     videoQuality.refreshLabels();
     media.refreshMediaButtons(connected);
     const flashlightBtn = els.featureHost?.querySelector('[data-feature="flashlight"]');

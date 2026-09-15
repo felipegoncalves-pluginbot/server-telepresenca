@@ -10,7 +10,8 @@
     "locomotion": { "$ref": "#/$defs/locomotion" },
     "video": { "$ref": "#/$defs/video" },
     "audio": { "$ref": "#/$defs/audio" },
-    "flashlight": { "$ref": "#/$defs/flashlight" }
+    "flashlight": { "$ref": "#/$defs/flashlight" },
+    "head": { "$ref": "#/$defs/head" }
   },
   "$defs": {
     "locomotion": {
@@ -72,6 +73,15 @@
         },
         "supportsIntensity": { "type": "boolean" },
         "default": { "enum": ["on", "off"] }
+      }
+    },
+    "head": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "available": { "type": "boolean" },
+        "yaw": { "type": "boolean" },
+        "pitch": { "type": "boolean" }
       }
     }
   }

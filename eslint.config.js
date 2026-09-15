@@ -112,6 +112,7 @@ export default [
         { type: "signaling", pattern: "public/js/signaling/*" },
         { type: "i18n", pattern: "public/js/i18n/*" },
         { type: "joystick", pattern: "public/js/joystick.js" },
+        { type: "headLook", pattern: "public/js/head-look.js" },
         { type: "operator", pattern: "public/js/operator.js" },
         { type: "main", pattern: "public/js/main.js" },
       ],
@@ -127,7 +128,7 @@ export default [
             { from: "protocol", allow: [] },
             {
               from: "feature",
-              allow: ["protocol", "signaling", "ui", "i18n", "joystick"],
+              allow: ["protocol", "signaling", "ui", "i18n", "joystick", "headLook"],
             },
             { from: "webrtc", allow: ["protocol", "signaling"] },
             { from: "media", allow: [] },
@@ -135,6 +136,7 @@ export default [
             { from: "signaling", allow: ["protocol"] },
             { from: "i18n", allow: [] },
             { from: "joystick", allow: [] },
+            { from: "headLook", allow: ["protocol"] },
             {
               from: "operator",
               allow: [

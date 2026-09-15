@@ -30,6 +30,10 @@ export function queryDom() {
     langCurrentFlag: document.getElementById("langCurrentFlag"),
     featureHost: document.getElementById("featureHost"),
     locomotionHost: document.getElementById("locomotionHost"),
+    headHost: document.getElementById("headHost"),
+    headLookLayer: document.getElementById("headLookLayer"),
+    headKbdHint: document.getElementById("headKbdHint"),
+    headHint: document.getElementById("headHint"),
   };
 }
 
@@ -41,5 +45,7 @@ export function hostById(id, els) {
   if (id === "call") return els.featureHost;
   if (id === "quality") return els.qualityPanel;
   if (id === "locomotion") return els.locomotionHost;
+  if (id === "head") return els.headHost;
+  if (id === "head-look") return els.headLookLayer;
   return document.querySelector(`[data-host="${id}"]`);
 }

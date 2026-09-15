@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "../helpers/test.js";
 import { beepFeature } from "../../public/js/features/beep.js";
 import { flashlightFeature } from "../../public/js/features/flashlight.js";
+import { createHeadFeature } from "../../public/js/features/head.js";
 import { createLocomotionFeature } from "../../public/js/features/locomotion.js";
 
 test("feature widgets expose id, opt-in and availability helpers", () => {
@@ -23,4 +24,10 @@ test("feature widgets expose id, opt-in and availability helpers", () => {
   assert.equal(locomotion.optIn, false);
   assert.equal(locomotion.isAvailable(null), true);
   assert.equal(typeof locomotion.mount, "function");
+
+  const head = createHeadFeature({}, (key) => key);
+  assert.equal(head.id, "head");
+  assert.equal(head.optIn, true);
+  assert.equal(head.isAvailable(null), false);
+  assert.equal(head.isAvailable({ head: { available: true } }), true);
 });

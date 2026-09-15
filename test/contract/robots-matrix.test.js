@@ -4,6 +4,7 @@ import {
   isBeepAvailable,
   isContinuousBackward,
   isFlashlightAvailable,
+  isHeadAvailable,
   isLocomotionAvailable,
 } from "../../public/js/protocol/capabilities.js";
 import { compileSchema, readJson } from "../helpers/load-schema.js";
@@ -18,6 +19,7 @@ const robots = [
       locomotion: true,
       beep: true,
       flashlight: false,
+      head: true,
       continuousBackward: false,
     },
   },
@@ -28,6 +30,7 @@ const robots = [
       locomotion: true,
       beep: true,
       flashlight: true,
+      head: false,
       continuousBackward: true,
     },
   },
@@ -38,6 +41,7 @@ const robots = [
       locomotion: true,
       beep: true,
       flashlight: false,
+      head: false,
       continuousBackward: false,
     },
   },
@@ -48,6 +52,7 @@ const robots = [
       locomotion: true,
       beep: true,
       flashlight: false,
+      head: false,
       continuousBackward: false,
     },
   },
@@ -65,6 +70,7 @@ for (const robot of robots) {
     assert.equal(isLocomotionAvailable(robot.caps), robot.hud.locomotion, "locomotion");
     assert.equal(isBeepAvailable(robot.caps), robot.hud.beep, "beep");
     assert.equal(isFlashlightAvailable(robot.caps), robot.hud.flashlight, "flashlight");
+    assert.equal(isHeadAvailable(robot.caps), robot.hud.head, "head");
     assert.equal(
       isContinuousBackward(robot.caps),
       robot.hud.continuousBackward,
@@ -92,6 +98,11 @@ test("HUD helpers ignore robotModel and only read capabilities", () => {
     isFlashlightAvailable({ robotModel: "sanbot-elf" }),
     false,
     "brand alone must not enable flashlight",
+  );
+  assert.equal(
+    isHeadAvailable({ robotModel: "cruzr-1s" }),
+    false,
+    "brand alone must not enable head look",
   );
 });
 

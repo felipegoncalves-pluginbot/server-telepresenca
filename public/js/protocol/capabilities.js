@@ -29,6 +29,25 @@ export function isFlashlightAvailable(caps) {
 }
 
 /**
+ * Head look is opt-in. Robots without a neck/head omit this.
+ * @param {object | null | undefined} caps
+ */
+export function isHeadAvailable(caps) {
+  return caps?.head?.available === true;
+}
+
+/**
+ * @param {object | null | undefined} caps
+ */
+export function headAxes(caps) {
+  const available = isHeadAvailable(caps);
+  return {
+    yaw: available && caps?.head?.yaw !== false,
+    pitch: available && caps?.head?.pitch !== false,
+  };
+}
+
+/**
  * @param {object | null | undefined} caps
  */
 export function isContinuousBackward(caps) {
