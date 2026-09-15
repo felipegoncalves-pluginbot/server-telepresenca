@@ -20,16 +20,16 @@
       {
         "id": "low",
         "width": 640,
-        "height": 360,
+        "height": 480,
         "fps": 15,
         "maxBitrateKbps": 800,
         "adaptive": false
       },
       {
         "id": "mid",
-        "width": 854,
-        "height": 480,
-        "fps": 24,
+        "width": 800,
+        "height": 600,
+        "fps": 30,
         "maxBitrateKbps": 1500,
         "adaptive": false
       },
@@ -43,15 +43,15 @@
       },
       {
         "id": "max",
-        "width": 1280,
-        "height": 720,
+        "width": 1920,
+        "height": 1080,
         "fps": 30,
         "maxBitrateKbps": 4500,
         "adaptive": false
       }
     ],
     "defaultPreset": "high",
-    "hardwareEncoder": false,
+    "hardwareEncoder": true,
     "adaptiveSupported": true
   }
 }

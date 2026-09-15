@@ -1,3 +1,5 @@
+import { waitWithTimeout } from "../webrtc/handshake.js";
+
 /**
  * @param {object} options
  * @param {object} options.els
@@ -75,7 +77,7 @@ export function createMediaController({
     }
   }
 
-  async function ensureMedia() {
+  async function ensureMedia({ timeoutMs = 0 } = {}) {
     if (localStream) return localStream;
     if (!navigator.mediaDevices?.getUserMedia) {
       console.warn(
@@ -112,7 +114,8 @@ export function createMediaController({
           return null;
         });
     }
-    return mediaRequest;
+    if (!timeoutMs) return mediaRequest;
+    return waitWithTimeout(mediaRequest, timeoutMs, localStream);
   }
 
   function stopLocal() {

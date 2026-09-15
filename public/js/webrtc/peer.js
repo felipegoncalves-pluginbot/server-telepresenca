@@ -4,6 +4,8 @@ import {
   SIGNAL_ICE_CANDIDATE,
   SIGNAL_OFFER,
 } from "../protocol/events.js";
+import { hasRenderableRemoteVideo } from "./handshake.js";
+import { createIceQueue } from "./ice-queue.js";
 
 const MAX_OFFER_RETRIES = 2;
 
@@ -27,12 +29,7 @@ export function createPeerController({
   let offerRetryTimer = null;
   let offerRetryCount = 0;
   let audioUnlockBound = false;
-
-  function hasRemoteVideoTrack() {
-    const stream = els.remoteVideo?.srcObject;
-    if (!stream) return false;
-    return stream.getVideoTracks().some((track) => track.readyState === "live");
-  }
+  const iceQueue = createIceQueue();
 
   function clearOfferRetryTimer() {
     if (offerRetryTimer) {
@@ -62,17 +59,30 @@ export function createPeerController({
   async function playRemoteWithSound() {
     const video = els.remoteVideo;
     if (!video.srcObject) return;
+    try {
+      video.muted = true;
+      await video.play();
+    } catch (_) {
+      /* autoplay muted still blocked — rare */
+    }
     video.muted = false;
     video.volume = 1;
     try {
       await video.play();
     } catch (_) {
+      video.muted = true;
       unlockRemoteAudioOnce();
+      try {
+        await video.play();
+      } catch (__) {
+        /* wait for gesture */
+      }
     }
   }
 
-  function cleanupPeer() {
-    clearOfferRetry();
+  function cleanupPeer({ resetRetry = true } = {}) {
+    if (resetRetry) clearOfferRetry();
+    iceQueue.reset();
     if (pc) {
       pc.onicecandidate = null;
       pc.ontrack = null;
@@ -86,10 +96,14 @@ export function createPeerController({
     setRtcState("idle");
   }
 
-  async function createPeerConnection() {
-    cleanupPeer();
+  async function createPeerConnection({ resetRetry = true } = {}) {
+    cleanupPeer({ resetRetry });
     const iceServers = getIceServers() || [];
-    pc = new RTCPeerConnection({ iceServers });
+    pc = new RTCPeerConnection({
+      iceServers,
+      bundlePolicy: "max-bundle",
+      rtcpMuxPolicy: "require",
+    });
     const localStream = getLocalStream();
 
     if (localStream) {
@@ -117,14 +131,18 @@ export function createPeerController({
     };
 
     pc.ontrack = (event) => {
-      if (event.track?.kind !== "video") return;
+      if (event.track?.kind !== "video") {
+        if (event.track?.kind === "audio" && event.streams?.[0] && !els.remoteVideo.srcObject) {
+          els.remoteVideo.srcObject = event.streams[0];
+        }
+        return;
+      }
       const [remoteStream] = event.streams;
-      els.remoteVideo.srcObject = remoteStream;
+      els.remoteVideo.srcObject = remoteStream || new MediaStream([event.track]);
       els.remotePlaceholder.classList.add("hidden");
       setStatus("status.live", "live");
-      clearOfferRetry();
       playRemoteWithSound();
-      if (typeof onRemoteVideo === "function") onRemoteVideo();
+      if (typeof onRemoteVideo === "function") onRemoteVideo("track");
     };
 
     pc.onconnectionstatechange = () => {
@@ -134,6 +152,9 @@ export function createPeerController({
       }
       if (pc.connectionState === "connected") {
         setStatus("status.live", "live");
+        if (hasRenderableRemoteVideo(els.remoteVideo)) {
+          clearOfferRetry();
+        }
         if (typeof onRemoteVideo === "function") onRemoteVideo("connected");
       }
     };
@@ -141,12 +162,13 @@ export function createPeerController({
     return pc;
   }
 
-  async function startCallAsOfferer() {
+  async function startCallAsOfferer({ iceRestart = false } = {}) {
     const socket = getSocket();
+    if (!socket) return;
     if (!pc) await createPeerConnection();
     makingOffer = true;
     try {
-      const offer = await pc.createOffer();
+      const offer = await pc.createOffer(iceRestart ? { iceRestart: true } : undefined);
       await pc.setLocalDescription(offer);
       socket.emit(EVENT_SIGNAL, {
         type: SIGNAL_OFFER,
@@ -157,15 +179,41 @@ export function createPeerController({
     }
   }
 
-  function scheduleOfferRetryIfNeeded(beginCall) {
+  function scheduleOfferRetryIfNeeded() {
     clearOfferRetryTimer();
     offerRetryTimer = setTimeout(async () => {
-      if (!getSocket() || !pc || hasRemoteVideoTrack()) return;
+      if (!getSocket() || !pc) return;
+      if (hasRenderableRemoteVideo(els.remoteVideo)) {
+        clearOfferRetry();
+        return;
+      }
       if (offerRetryCount >= MAX_OFFER_RETRIES) return;
       offerRetryCount += 1;
-      console.warn("Sem vídeo do robô; reenviando offer.", offerRetryCount);
-      await beginCall();
-    }, 4500);
+      console.warn("Sem vídeo do robô; renegociando.", offerRetryCount);
+      try {
+        if (offerRetryCount >= MAX_OFFER_RETRIES) {
+          await createPeerConnection({ resetRetry: false });
+          await startCallAsOfferer();
+        } else {
+          await startCallAsOfferer({ iceRestart: true });
+        }
+      } catch (err) {
+        console.warn("Offer retry failed", err);
+      }
+      scheduleOfferRetryIfNeeded();
+    }, 4000);
+  }
+
+  async function addIceCandidate(candidate) {
+    if (!pc || !candidate) return;
+    if (iceQueue.enqueueIfNeeded(candidate)) return;
+    try {
+      await pc.addIceCandidate(candidate);
+    } catch (err) {
+      if (!ignoreOffer) {
+        console.warn("ICE candidate error", err);
+      }
+    }
   }
 
   async function handleSignal(message) {
@@ -182,6 +230,7 @@ export function createPeerController({
       if (ignoreOffer) return;
 
       await pc.setRemoteDescription(message.data);
+      await iceQueue.flush((candidate) => pc.addIceCandidate(candidate));
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       socket.emit(EVENT_SIGNAL, {
@@ -193,17 +242,12 @@ export function createPeerController({
 
     if (message.type === SIGNAL_ANSWER) {
       await pc.setRemoteDescription(message.data);
+      await iceQueue.flush((candidate) => pc.addIceCandidate(candidate));
       return;
     }
 
     if (message.type === SIGNAL_ICE_CANDIDATE && message.data) {
-      try {
-        await pc.addIceCandidate(message.data);
-      } catch (err) {
-        if (!ignoreOffer) {
-          console.warn("ICE candidate error", err);
-        }
-      }
+      await addIceCandidate(message.data);
     }
   }
 

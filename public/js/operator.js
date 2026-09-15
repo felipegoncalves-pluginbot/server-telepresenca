@@ -18,7 +18,7 @@ import { bindLangSwitch } from "./ui/lang-switch.js";
 import { createStatus } from "./ui/status.js";
 import { fetchIceServers } from "./webrtc/ice.js";
 import { createPeerController } from "./webrtc/peer.js";
-import { applyOutgoingVideoQuality, captureFormatKey } from "./webrtc/quality.js";
+import { applyOutgoingVideoQuality } from "./webrtc/quality.js";
 
 function resolveRoomId() {
   try {
@@ -49,7 +49,6 @@ export function createOperator({ els, i18n, ioClient }) {
   let connecting = false;
   let robotCapabilities = null;
   let qualityApplying = false;
-  let lastAppliedCaptureKey = null;
 
   const locomotion = createLocomotionFeature(els, t);
   const videoQuality = createVideoQualityFeature(els, t);
@@ -76,7 +75,6 @@ export function createOperator({ els, i18n, ioClient }) {
           applyOutgoingVideoQuality(peer.getPc(), preset).catch((err) =>
             console.warn(err),
           );
-          lastAppliedCaptureKey = captureFormatKey(preset);
         }
       }
     },
@@ -132,39 +130,17 @@ export function createOperator({ els, i18n, ioClient }) {
       }
       if (connected) signaling.sendVideoQuality(preset.id);
       if (connected && signaling.getSocket()) {
-        const captureKey = captureFormatKey(preset);
-        if (captureKey !== lastAppliedCaptureKey) {
-          await resetVideoConnection();
-          lastAppliedCaptureKey = captureKey;
-        } else {
-          await applyOutgoingVideoQuality(peer.getPc(), preset);
-        }
+        await applyOutgoingVideoQuality(peer.getPc(), preset);
       }
     } finally {
       qualityApplying = false;
     }
   }
 
-  async function resetVideoConnection() {
-    if (!connected || !signaling.getSocket()) return;
-    peer.cleanupPeer();
-    status.setPlaceholder("status.connecting");
-    status.setStatus("status.connecting", "online");
-    await peer.createPeerConnection();
-    await peer.startCallAsOfferer();
-    const preset = videoQuality.getPanel()?.getSelectedPreset();
-    if (preset) {
-      signaling.sendVideoQuality(preset.id);
-      await applyOutgoingVideoQuality(peer.getPc(), preset);
-      lastAppliedCaptureKey = captureFormatKey(preset);
-    }
-  }
-
   async function beginCallWithRobot() {
-    const preset = videoQuality.getPanel()?.getSelectedPreset();
-    if (preset) signaling.sendVideoQuality(preset.id);
+    await media.ensureMedia({ timeoutMs: 4000 });
     await peer.startCallAsOfferer();
-    peer.scheduleOfferRetryIfNeeded(beginCallWithRobot);
+    peer.scheduleOfferRetryIfNeeded();
   }
 
   function setConnectedUi(isConnectedFlag) {
@@ -216,7 +192,7 @@ export function createOperator({ els, i18n, ioClient }) {
 
     iceServers = await fetchIceServers();
 
-    media.ensureMedia().then((stream) => {
+    media.ensureMedia({ timeoutMs: 0 }).then((stream) => {
       if (
         !stream &&
         !window.isSecureContext &&

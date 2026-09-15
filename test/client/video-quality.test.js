@@ -35,6 +35,11 @@ test("resolveVideoCapabilities falls back to five default presets", () => {
   const fallback = resolveVideoCapabilities(null);
   assert.equal(fallback.presets.length, 5);
   assert.equal(fallback.defaultPreset, "high");
+  const byId = Object.fromEntries(fallback.presets.map((item) => [item.id, item]));
+  assert.equal(byId.low.width, 640);
+  assert.equal(byId.low.height, 480);
+  assert.equal(byId.max.width, 1920);
+  assert.equal(byId.max.height, 1080);
 });
 
 test("preset persistence", () => {
