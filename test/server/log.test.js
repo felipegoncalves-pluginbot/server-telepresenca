@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import { redact } from "../../src/log.js";
-import test from "../helpers/harness.js";
 
 test("redact hides credential-like keys", () => {
   const hidden = redact({

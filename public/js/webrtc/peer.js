@@ -132,7 +132,11 @@ export function createPeerController({
 
     pc.ontrack = (event) => {
       if (event.track?.kind !== "video") {
-        if (event.track?.kind === "audio" && event.streams?.[0] && !els.remoteVideo.srcObject) {
+        if (
+          event.track?.kind === "audio" &&
+          event.streams?.[0] &&
+          !els.remoteVideo.srcObject
+        ) {
           els.remoteVideo.srcObject = event.streams[0];
         }
         return;
@@ -188,13 +192,16 @@ export function createPeerController({
         return;
       }
       if (offerRetryCount >= MAX_OFFER_RETRIES) return;
+      const state = pc.connectionState;
+      if (state === "connected" || state === "connecting") {
+        offerRetryCount += 1;
+        if (offerRetryCount < MAX_OFFER_RETRIES) scheduleOfferRetryIfNeeded();
+        return;
+      }
       offerRetryCount += 1;
-      console.warn("Sem vídeo do robô; renegociando.", offerRetryCount);
+      console.warn("Sem vídeo do robô; renegociando.", offerRetryCount, state);
       try {
-        if (offerRetryCount >= MAX_OFFER_RETRIES) {
-          await createPeerConnection({ resetRetry: false });
-          await startCallAsOfferer();
-        } else {
+        if (state === "failed" || state === "disconnected") {
           await startCallAsOfferer({ iceRestart: true });
         }
       } catch (err) {

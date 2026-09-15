@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import { createIceQueue } from "../../public/js/webrtc/ice-queue.js";
-import test from "../helpers/harness.js";
 
 test("ICE queue holds candidates until remote description is set", async () => {
   const queue = createIceQueue();

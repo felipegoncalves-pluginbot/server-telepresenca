@@ -49,6 +49,7 @@ export function createOperator({ els, i18n, ioClient }) {
   let connecting = false;
   let robotCapabilities = null;
   let qualityApplying = false;
+  let callStartInFlight = false;
 
   const locomotion = createLocomotionFeature(els, t);
   const videoQuality = createVideoQualityFeature(els, t);
@@ -68,10 +69,9 @@ export function createOperator({ els, i18n, ioClient }) {
     setRtcState: status.setRtcState,
     setStatus: status.setStatus,
     onRemoteVideo(reason) {
-      if (reason === "connected") {
+      if (reason === "connected" || reason === "track") {
         const preset = videoQuality.getPanel()?.getSelectedPreset();
         if (preset) {
-          signaling.sendVideoQuality(preset.id);
           applyOutgoingVideoQuality(peer.getPc(), preset).catch((err) =>
             console.warn(err),
           );
@@ -138,9 +138,15 @@ export function createOperator({ els, i18n, ioClient }) {
   }
 
   async function beginCallWithRobot() {
-    await media.ensureMedia({ timeoutMs: 4000 });
-    await peer.startCallAsOfferer();
-    peer.scheduleOfferRetryIfNeeded();
+    if (callStartInFlight) return;
+    callStartInFlight = true;
+    try {
+      await media.ensureMedia({ timeoutMs: 4000 });
+      await peer.startCallAsOfferer();
+      peer.scheduleOfferRetryIfNeeded();
+    } finally {
+      callStartInFlight = false;
+    }
   }
 
   function setConnectedUi(isConnectedFlag) {

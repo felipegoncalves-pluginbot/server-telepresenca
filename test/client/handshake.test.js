@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import {
   hasRenderableRemoteVideo,
   shouldRestartForCapture,
   waitWithTimeout,
 } from "../../public/js/webrtc/handshake.js";
-import test from "../helpers/harness.js";
 
 test("shouldRestartForCapture ignores first apply (null previous key)", () => {
   assert.equal(
@@ -34,10 +34,7 @@ test("shouldRestartForCapture only when capture key actually changes", () => {
     }),
     true,
   );
-  assert.equal(
-    shouldRestartForCapture("auto", { adaptive: true }),
-    false,
-  );
+  assert.equal(shouldRestartForCapture("auto", { adaptive: true }), false);
 });
 
 test("hasRenderableRemoteVideo requires frames, not just a live track", () => {
@@ -81,4 +78,17 @@ test("waitWithTimeout returns fallback when the promise is slow", async () => {
 test("waitWithTimeout returns the resolved value when it wins", async () => {
   const value = await waitWithTimeout(Promise.resolve("ok"), 50, "fallback");
   assert.equal(value, "ok");
+});
+
+test("ice restart is not warranted while a live frame is already rendering", () => {
+  assert.equal(
+    hasRenderableRemoteVideo({
+      videoWidth: 960,
+      videoHeight: 540,
+      srcObject: {
+        getVideoTracks: () => [{ readyState: "live", muted: false }],
+      },
+    }),
+    true,
+  );
 });

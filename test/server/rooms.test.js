@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import { createRoomStore } from "../../src/rooms/store.js";
-import test from "../helpers/harness.js";
 
 test("roomState reports occupancy and opaque capabilities", () => {
   const rooms = createRoomStore();

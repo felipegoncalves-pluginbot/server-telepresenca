@@ -4,7 +4,6 @@
     "src/index.js",
     "server.js",
     "public/js/main.js",
-    "test/run.js",
     "test/**/*.test.js",
     "eslint.config.js",
     "scripts/**/*.mjs"
@@ -13,7 +12,9 @@
     "src/**/*.js",
     "public/js/**/*.js",
     "test/**/*.js",
-    "scripts/**/*.mjs"
+    "scripts/**/*.mjs",
+    "eslint/**/*.js",
+    "eslint.config.js"
   ],
   "ignoreDependencies": ["ts-api-utils"],
   "rules": {

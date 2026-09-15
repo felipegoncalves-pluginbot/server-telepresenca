@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import test from "../helpers/harness.js";
+import { i18n } from "../../public/js/i18n/index.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const localesDir = path.join(root, "public", "locales");
@@ -125,5 +126,19 @@ test("locale files share keys and interpolation tokens", () => {
       !jsSources.includes(`"${phrase}"`) && !jsSources.includes(`'${phrase}'`),
       `hardcoded UI string in JS: ${phrase}`,
     );
+  }
+});
+
+test("i18n.t interpolates tokens and falls back to the key", () => {
+  const previousTable = i18n.messages["pt-BR"];
+  const previousLocale = i18n.locale;
+  i18n.messages["pt-BR"] = { "hello.name": "Olá {{name}}" };
+  i18n.locale = "pt-BR";
+  try {
+    assert.equal(i18n.t("hello.name", { name: "Ana" }), "Olá Ana");
+    assert.equal(i18n.t("missing.key"), "missing.key");
+  } finally {
+    i18n.messages["pt-BR"] = previousTable;
+    i18n.locale = previousLocale;
   }
 });

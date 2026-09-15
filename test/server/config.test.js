@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import { loadConfig, splitCsv } from "../../src/config.js";
-import test from "../helpers/harness.js";
 
 test("splitCsv trims and drops empties", () => {
   assert.deepEqual(splitCsv(" a, b , ,c "), ["a", "b", "c"]);

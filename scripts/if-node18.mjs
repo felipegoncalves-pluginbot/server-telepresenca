@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Run a quality tool only when Node is new enough (ESLint 9 / knip / depcruise).
- * Runtime, tests and Prettier stay on Node 16.
+ * Tests use node:test (Node >= 20). Prettier still runs on older Node.
  */
 import { spawnSync } from "node:child_process";
 

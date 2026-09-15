@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import {
   isBeepAvailable,
   isContinuousBackward,
   isFlashlightAvailable,
   isLocomotionAvailable,
 } from "../../public/js/protocol/capabilities.js";
-import test from "../helpers/harness.js";
 import { compileSchema, readJson } from "../helpers/load-schema.js";
 
 const validate = compileSchema("schemas/capabilities.schema.json");

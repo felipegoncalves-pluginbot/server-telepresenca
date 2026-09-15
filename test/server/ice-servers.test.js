@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import { buildIceServers } from "../../src/ice/ice-servers.js";
-import test from "../helpers/harness.js";
 import { compileSchema } from "../helpers/load-schema.js";
 
 const validate = compileSchema("schemas/ice-servers.schema.json");

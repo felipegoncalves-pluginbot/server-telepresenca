@@ -54,7 +54,7 @@ export function hasRenderableRemoteVideo(videoEl) {
   }
   const stream = videoEl.srcObject;
   if (!stream || typeof stream.getVideoTracks !== "function") return false;
-  return stream.getVideoTracks().some(
-    (track) => track.readyState === "live" && track.muted === false,
-  );
+  return stream
+    .getVideoTracks()
+    .some((track) => track.readyState === "live" && track.muted === false);
 }

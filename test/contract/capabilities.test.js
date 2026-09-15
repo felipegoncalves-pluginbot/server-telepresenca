@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import {
+  backwardPulseDistanceM,
   isBeepAvailable,
   isContinuousBackward,
   isFlashlightAvailable,
   isLocomotionAvailable,
+  normalizeCapabilities,
 } from "../../public/js/protocol/capabilities.js";
-import test from "../helpers/harness.js";
 import { compileSchema, readJson } from "../helpers/load-schema.js";
 
 const validate = compileSchema("schemas/capabilities.schema.json");
@@ -43,4 +45,20 @@ test("locomotion pulse vs continuous", () => {
   assert.equal(isContinuousBackward(cruzr), false);
   assert.equal(isContinuousBackward(flashlightRobot), true);
   assert.equal(isLocomotionAvailable({ locomotion: { available: false } }), false);
+});
+
+test("backward pulse defaults to 20cm", () => {
+  assert.equal(backwardPulseDistanceM(null), 0.2);
+  assert.equal(
+    backwardPulseDistanceM({ locomotion: { backwardPulseDistanceM: 0.4 } }),
+    0.4,
+  );
+});
+
+test("normalizeCapabilities rejects non-objects", () => {
+  assert.equal(normalizeCapabilities(null), null);
+  assert.equal(normalizeCapabilities("x"), null);
+  assert.deepEqual(normalizeCapabilities({ flashlight: { available: true } }), {
+    flashlight: { available: true },
+  });
 });

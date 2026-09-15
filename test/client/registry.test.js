@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import { createFeatureRegistry } from "../../public/js/features/registry.js";
 import { isFlashlightAvailable } from "../../public/js/protocol/capabilities.js";
-import test from "../helpers/harness.js";
 
 test("opt-in feature mounts only when advertised", () => {
   let mounts = 0;

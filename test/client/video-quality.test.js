@@ -1,21 +1,25 @@
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import {
   loadSavedPresetId,
   resolveVideoCapabilities,
   savePresetId,
 } from "../../public/js/features/video-quality.js";
 import { captureFormatKey } from "../../public/js/webrtc/quality.js";
-import test from "../helpers/harness.js";
 
 const store = {};
-globalThis.localStorage = {
-  getItem(key) {
-    return key in store ? store[key] : null;
+Object.defineProperty(globalThis, "localStorage", {
+  configurable: true,
+  writable: true,
+  value: {
+    getItem(key) {
+      return key in store ? store[key] : null;
+    },
+    setItem(key, value) {
+      store[key] = String(value);
+    },
   },
-  setItem(key, value) {
-    store[key] = String(value);
-  },
-};
+});
 
 test("resolveVideoCapabilities uses robot presets when present", () => {
   const caps = resolveVideoCapabilities({
