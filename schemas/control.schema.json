@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pluginbot.ai/schemas/telepresenca-control.v1.json",
+  "title": "ControlPayload",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["action"],
+  "properties": {
+    "action": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*$"
+    },
+    "value": {},
+    "from": { "type": "string" }
+  },
+  "examples": [
+    { "action": "beep" },
+    { "action": "forward" },
+    { "action": "backward" },
+    { "action": "left" },
+    { "action": "right" },
+    { "action": "stop" },
+    { "action": "flashlight.toggle" },
+    { "action": "flashlight.on" },
+    { "action": "flashlight.off" }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "roles": ["operator", "visitor", "robot"],
+  "roleAlias": {
+    "visitor": "operator"
+  },
+  "clientToServer": ["join", "signal", "control", "video-quality", "hangup", "leave"],
+  "serverToClient": [
+    "joined",
+    "peer-joined",
+    "peer-left",
+    "room-state",
+    "replaced",
+    "signal",
+    "control",
+    "video-quality",
+    "hangup",
+    "error-message"
+  ],
+  "signalTypes": ["offer", "answer", "ice-candidate"]
+}

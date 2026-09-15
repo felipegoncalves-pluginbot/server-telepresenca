@@ -19,6 +19,7 @@
   "media.camOn": "Turn camera off",
   "media.camOff": "Turn camera on",
   "media.beep": "Send command to the robot",
+  "media.flashlight": "Flashlight",
   "movement.forward": "Forward",
   "movement.backward": "Reverse",
   "movement.left": "Turn left",

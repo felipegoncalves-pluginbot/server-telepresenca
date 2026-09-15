@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "robotModel": "sanbot-elf",
+  "locomotion": {
+    "available": true,
+    "backwardMode": "continuous",
+    "rearObstacleSensor": true,
+    "frontObstacleSensor": true,
+    "turnSignInverted": false
+  },
+  "audio": {
+    "beep": true
+  },
+  "video": {
+    "defaultPreset": "high",
+    "adaptiveSupported": true
+  },
+  "flashlight": {
+    "available": true,
+    "modes": ["on", "off", "toggle"],
+    "supportsIntensity": false,
+    "default": "off"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "locomotion": {
+    "available": true,
+    "backwardMode": "continuous"
+  },
+  "audio": { "beep": true },
+  "flashlight": {
+    "available": true,
+    "modes": ["on", "off", "toggle"],
+    "supportsIntensity": false,
+    "default": "off"
+  }
+}

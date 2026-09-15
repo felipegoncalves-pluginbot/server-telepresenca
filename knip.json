@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/index.js",
+    "server.js",
+    "public/js/main.js",
+    "test/run.js",
+    "test/**/*.test.js",
+    "eslint.config.js",
+    "scripts/**/*.mjs"
+  ],
+  "project": [
+    "src/**/*.js",
+    "public/js/**/*.js",
+    "test/**/*.js",
+    "scripts/**/*.mjs"
+  ],
+  "ignoreDependencies": ["ts-api-utils"],
+  "rules": {
+    "exports": "off",
+    "types": "off",
+    "nsExports": "off",
+    "enumMembers": "off"
+  }
+}

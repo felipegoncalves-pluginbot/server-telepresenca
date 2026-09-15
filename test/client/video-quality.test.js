@@ -1,0 +1,61 @@
+import assert from "node:assert/strict";
+import {
+  loadSavedPresetId,
+  resolveVideoCapabilities,
+  savePresetId,
+} from "../../public/js/features/video-quality.js";
+import { captureFormatKey } from "../../public/js/webrtc/quality.js";
+import test from "../helpers/harness.js";
+
+const store = {};
+globalThis.localStorage = {
+  getItem(key) {
+    return key in store ? store[key] : null;
+  },
+  setItem(key, value) {
+    store[key] = String(value);
+  },
+};
+
+test("resolveVideoCapabilities uses robot presets when present", () => {
+  const caps = resolveVideoCapabilities({
+    video: {
+      defaultPreset: "high",
+      presets: [
+        { id: "auto", adaptive: true },
+        { id: "high", width: 1280, height: 720, fps: 30, maxBitrateKbps: 2500 },
+      ],
+    },
+  });
+  assert.equal(caps.defaultPreset, "high");
+  assert.equal(caps.presets.length, 2);
+});
+
+test("resolveVideoCapabilities falls back to five default presets", () => {
+  const fallback = resolveVideoCapabilities(null);
+  assert.equal(fallback.presets.length, 5);
+  assert.equal(fallback.defaultPreset, "high");
+});
+
+test("preset persistence", () => {
+  savePresetId("mid");
+  assert.equal(loadSavedPresetId("high"), "mid");
+});
+
+test("normalize a single robot preset", () => {
+  const normalized = resolveVideoCapabilities({
+    video: {
+      presets: [{ id: "low", width: 640, height: 360, fps: 15, maxBitrateKbps: 800 }],
+    },
+  });
+  assert.equal(normalized.presets[0].id, "low");
+  assert.equal(normalized.presets[0].maxBitrateKbps, 800);
+});
+
+test("captureFormatKey", () => {
+  assert.equal(
+    captureFormatKey({ id: "high", width: 1280, height: 720, fps: 30 }),
+    "1280x720@30",
+  );
+  assert.equal(captureFormatKey({ id: "auto", adaptive: true }), "auto");
+});

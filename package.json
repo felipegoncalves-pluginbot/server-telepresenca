@@ -2,18 +2,53 @@
   "name": "telepresenca-server",
   "version": "1.0.0",
   "description": "Servidor de sinalização WebRTC para telepresença local",
-  "main": "server.js",
+  "type": "module",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "test": "node test/i18n.test.js && node test/video-quality.test.js"
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "test": "node test/run.js",
+    "lint": "node scripts/if-node18.mjs npx eslint .",
+    "lint:fix": "node scripts/if-node18.mjs npx eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "arch": "node scripts/if-node18.mjs npx depcruise src public/js --config .dependency-cruiser.cjs",
+    "deps": "node scripts/if-node18.mjs npx knip",
+    "complexity": "node scripts/complexity-report.mjs",
+    "dup": "jscpd --config .jscpd.json",
+    "deadcode": "node scripts/if-node18.mjs npx knip",
+    "security": "node scripts/if-node18.mjs npx eslint . --quiet",
+    "semgrep": "node scripts/semgrep.mjs",
+    "audit": "npm audit --omit=dev --audit-level=high",
+    "quality": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run dup && npm run semgrep",
+    "ci": "npm run quality && npm run arch && npm run deps && npm run audit"
   },
   "engines": {
     "node": ">=16"
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@types/node": "^18.19.0",
+    "ajv": "^8.17.1",
+    "dependency-cruiser": "^16.10.0",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-boundaries": "^5.0.1",
+    "eslint-plugin-jsdoc": "^50.6.0",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-sonarjs": "^3.0.1",
+    "globals": "^15.13.0",
+    "jscpd": "^4.0.5",
+    "knip": "^5.41.0",
+    "prettier": "^3.5.3",
+    "ts-api-utils": "^2.5.0",
+    "typescript": "^5.7.2"
   }
 }

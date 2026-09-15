@@ -1,0 +1,57 @@
+{
+  "locomotion": {
+    "backwardMode": "pulse",
+    "rearObstacleSensor": false,
+    "frontObstacleSensor": true,
+    "turnSignInverted": true,
+    "backwardPulseDistanceM": 0.2,
+    "backwardPulseCooldownMs": 400
+  },
+  "video": {
+    "presets": [
+      {
+        "id": "auto",
+        "width": 0,
+        "height": 0,
+        "fps": 0,
+        "maxBitrateKbps": 0,
+        "adaptive": true
+      },
+      {
+        "id": "low",
+        "width": 640,
+        "height": 360,
+        "fps": 15,
+        "maxBitrateKbps": 800,
+        "adaptive": false
+      },
+      {
+        "id": "mid",
+        "width": 854,
+        "height": 480,
+        "fps": 24,
+        "maxBitrateKbps": 1500,
+        "adaptive": false
+      },
+      {
+        "id": "high",
+        "width": 1280,
+        "height": 720,
+        "fps": 30,
+        "maxBitrateKbps": 2500,
+        "adaptive": false
+      },
+      {
+        "id": "max",
+        "width": 1280,
+        "height": 720,
+        "fps": 30,
+        "maxBitrateKbps": 4500,
+        "adaptive": false
+      }
+    ],
+    "defaultPreset": "high",
+    "hardwareEncoder": false,
+    "adaptiveSupported": true
+  }
+}

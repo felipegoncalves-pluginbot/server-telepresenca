@@ -125,7 +125,7 @@
           </div>
         </header>
 
-        <div class="move-hud">
+        <div class="move-hud" id="locomotionHost" data-host="locomotion">
           <div class="joystick-wrap">
             <div
               id="joystick"
@@ -269,6 +269,8 @@
             </svg>
           </button>
 
+          <div id="featureHost" class="feature-host" data-host="call"></div>
+
           <button
             id="btnHangup"
             class="ctrl hangup"
@@ -332,21 +334,13 @@
 
         <div id="endedOverlay" class="ended-overlay hidden">
           <p data-i18n="call.ended">Chamada encerrada</p>
-          <button
-            id="btnRejoin"
-            class="rejoin"
-            type="button"
-            data-i18n="call.rejoin"
-          >
+          <button id="btnRejoin" class="rejoin" type="button" data-i18n="call.rejoin">
             Entrar novamente
           </button>
         </div>
       </div>
     </div>
 
-    <script src="i18n.js"></script>
-    <script src="joystick.js"></script>
-    <script src="video-quality.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>

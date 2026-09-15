@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pluginbot.ai/schemas/telepresenca-ice-servers.v1.json",
+  "title": "IceServersResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["iceServers"],
+  "properties": {
+    "iceServers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["urls"],
+        "properties": {
+          "urls": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 },
+                "minItems": 1
+              }
+            ]
+          },
+          "username": { "type": "string" },
+          "credential": { "type": "string" }
+        }
+      }
+    }
+  }
+}

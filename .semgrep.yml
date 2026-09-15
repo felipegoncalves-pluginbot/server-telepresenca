@@ -1,0 +1,39 @@
+rules:
+  - id: no-robot-brand-branch
+    languages: [javascript]
+    severity: ERROR
+    message: Operator UI must not branch on robot brand. Gate on capabilities.
+    paths:
+      include:
+        - public/js
+    pattern-either:
+      - pattern: $X === "cruzr"
+      - pattern: $X === "sanbot"
+      - pattern: $X == "cruzr"
+      - pattern: $X == "sanbot"
+      - pattern: $X === "cruzr-1s"
+      - pattern: $X === "sanbot-elf"
+      - pattern: robotModel === $BRAND
+      - pattern: if ($X === "cruzr") { ... }
+      - pattern: if ($X === "sanbot") { ... }
+
+  - id: no-ice-in-frontend
+    languages: [javascript]
+    severity: ERROR
+    message: STUN/TURN must come from GET /ice-servers, never from public/js.
+    paths:
+      include:
+        - public/js
+    pattern-regex: (?i)(turns?:|stun:|ICE_SERVERS|metered\.ca)
+
+  - id: no-eval
+    languages: [javascript]
+    severity: ERROR
+    message: Dynamic code execution is forbidden.
+    paths:
+      include:
+        - public/js
+        - src
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pluginbot.ai/schemas/telepresenca-capabilities.v1.json",
+  "title": "TelepresencaCapabilities",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "robotModel": { "type": "string", "maxLength": 64 },
+    "locomotion": { "$ref": "#/$defs/locomotion" },
+    "video": { "$ref": "#/$defs/video" },
+    "audio": { "$ref": "#/$defs/audio" },
+    "flashlight": { "$ref": "#/$defs/flashlight" }
+  },
+  "$defs": {
+    "locomotion": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "available": { "type": "boolean" },
+        "backwardMode": { "enum": ["pulse", "continuous"] },
+        "rearObstacleSensor": { "type": "boolean" },
+        "frontObstacleSensor": { "type": "boolean" },
+        "turnSignInverted": { "type": "boolean" },
+        "backwardPulseDistanceM": { "type": "number", "exclusiveMinimum": 0 },
+        "backwardPulseCooldownMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "videoPreset": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 },
+        "fps": { "type": "integer", "minimum": 0 },
+        "maxBitrateKbps": { "type": "integer", "minimum": 0 },
+        "adaptive": { "type": "boolean" }
+      }
+    },
+    "video": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "presets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/videoPreset" }
+        },
+        "defaultPreset": { "type": "string" },
+        "hardwareEncoder": { "type": "boolean" },
+        "adaptiveSupported": { "type": "boolean" }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "beep": { "type": "boolean" }
+      }
+    },
+    "flashlight": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "available": { "type": "boolean" },
+        "modes": {
+          "type": "array",
+          "items": { "enum": ["on", "off", "toggle"] },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "supportsIntensity": { "type": "boolean" },
+        "default": { "enum": ["on", "off"] }
+      }
+    }
+  }
+}
