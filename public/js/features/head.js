@@ -7,7 +7,7 @@ import {
 } from "../protocol/look.js";
 import { headAxes, isHeadAvailable } from "../protocol/capabilities.js";
 
-const SEND_MS = 50;
+const SEND_MS = 80;
 const KEY_TICK_MS = 50;
 
 /**
@@ -32,14 +32,7 @@ export function createHeadFeature(els, t) {
   }
 
   function setHostHidden(hidden) {
-    if (els.headHost) els.headHost.hidden = hidden;
     if (els.headLookLayer) els.headLookLayer.hidden = hidden;
-  }
-
-  function setKeyFeedback(key, on) {
-    if (!els.headKbdHint) return;
-    const cap = els.headKbdHint.querySelector(`[data-key="${key}"]`);
-    if (cap) cap.classList.toggle("is-active", on);
   }
 
   function applyPreview(preview) {
@@ -117,7 +110,6 @@ export function createHeadFeature(els, t) {
       clearInterval(keyTimer);
       keyTimer = null;
     }
-    for (const key of held) setKeyFeedback(key, false);
     held.clear();
   }
 
@@ -142,7 +134,6 @@ export function createHeadFeature(els, t) {
     if ((key === "i" || key === "k") && !on.pitch) return;
     event.preventDefault();
     held.add(key);
-    setKeyFeedback(key, true);
     if (!keyTimer) keyTimer = setInterval(tickKeys, KEY_TICK_MS);
     tickKeys();
   }
@@ -152,7 +143,6 @@ export function createHeadFeature(els, t) {
     if (!held.has(key)) return;
     event.preventDefault();
     held.delete(key);
-    setKeyFeedback(key, false);
     if (!held.size) stopKeys();
     flushLook(true);
   }
@@ -226,10 +216,6 @@ export function createHeadFeature(els, t) {
         els.headLookLayer.setAttribute("aria-label", t("head.layer"));
         els.headLookLayer.title = t("head.hintKeyboard");
       }
-      if (els.headKbdHint) {
-        els.headKbdHint.setAttribute("aria-label", t("head.hintKeyboard"));
-      }
-      if (els.headHint) els.headHint.textContent = t("head.look");
     },
   };
 }
