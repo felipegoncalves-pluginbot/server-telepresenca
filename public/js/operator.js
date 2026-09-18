@@ -106,7 +106,10 @@ export function createOperator({ els, i18n, ioClient }) {
     return {
       sendControl: (action, value, opts) => {
         if (!connected) return;
-        signaling.sendControl(action, value, opts);
+        const sentViaP2P = peer.sendDataChannelControl(action, value);
+        if (!sentViaP2P) {
+          signaling.sendControl(action, value, opts);
+        }
       },
       sendVideoQuality: (presetId) => {
         if (!connected) return;

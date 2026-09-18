@@ -29,6 +29,7 @@ export function createPeerController({
   let offerRetryTimer = null;
   let offerRetryCount = 0;
   let audioUnlockBound = false;
+  let controlChannel = null;
   const iceQueue = createIceQueue();
 
   function clearOfferRetryTimer() {
@@ -83,6 +84,17 @@ export function createPeerController({
   function cleanupPeer({ resetRetry = true } = {}) {
     if (resetRetry) clearOfferRetry();
     iceQueue.reset();
+    if (controlChannel) {
+      controlChannel.onopen = null;
+      controlChannel.onclose = null;
+      controlChannel.onerror = null;
+      try {
+        controlChannel.close();
+      } catch {
+        /* ignore close error */
+      }
+      controlChannel = null;
+    }
     if (pc) {
       pc.onicecandidate = null;
       pc.ontrack = null;
@@ -104,6 +116,16 @@ export function createPeerController({
       bundlePolicy: "max-bundle",
       rtcpMuxPolicy: "require",
     });
+
+    try {
+      controlChannel = pc.createDataChannel("control", {
+        ordered: false,
+        maxRetransmits: 0,
+      });
+    } catch (err) {
+      console.warn("Falha ao criar DataChannel:", err);
+    }
+
     const localStream = getLocalStream();
 
     if (localStream) {
@@ -267,5 +289,19 @@ export function createPeerController({
     scheduleOfferRetryIfNeeded,
     clearOfferRetry,
     playRemoteWithSound,
+    sendDataChannelControl(action, value) {
+      if (controlChannel && controlChannel.readyState === "open") {
+        try {
+          controlChannel.send(JSON.stringify({ action, value }));
+          return true;
+        } catch (err) {
+          console.warn("Erro ao enviar via DataChannel:", err);
+        }
+      }
+      return false;
+    },
+    isDataChannelReady() {
+      return Boolean(controlChannel && controlChannel.readyState === "open");
+    },
   };
 }

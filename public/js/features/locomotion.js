@@ -5,6 +5,8 @@ import {
   isLocomotionAvailable,
 } from "../protocol/capabilities.js";
 
+export const LOCOMOTION_HEARTBEAT_INTERVAL_MS = 80;
+
 const MOVEMENT_I18N = {
   forward: "movement.forward",
   backward: "movement.backward",
@@ -85,7 +87,7 @@ export function createLocomotionFeature(els, t) {
         clearInterval(movementHeartbeat);
         movementHeartbeat = null;
       }
-    }, 200);
+    }, LOCOMOTION_HEARTBEAT_INTERVAL_MS);
   }
 
   function stopMovement(sendStop = true) {
@@ -96,7 +98,7 @@ export function createLocomotionFeature(els, t) {
     if (activeMovement) {
       activeMovement = null;
       if (sendStop && ctx?.isConnected()) {
-        sendControl("stop", { volatile: true });
+        sendControl("stop", { volatile: false });
       }
     }
   }
@@ -185,15 +187,19 @@ export function createLocomotionFeature(els, t) {
       joystick.setEnabled(nextCtx.isConnected());
 
       const onBlur = () => stopMovement(true);
-      window.addEventListener("blur", onBlur);
-      window.addEventListener("keydown", onKeyDown);
-      window.addEventListener("keyup", onKeyUp);
+      if (typeof window !== "undefined") {
+        window.addEventListener("blur", onBlur);
+        window.addEventListener("keydown", onKeyDown);
+        window.addEventListener("keyup", onKeyUp);
+      }
 
       return () => {
         stopMovement(true);
-        window.removeEventListener("blur", onBlur);
-        window.removeEventListener("keydown", onKeyDown);
-        window.removeEventListener("keyup", onKeyUp);
+        if (typeof window !== "undefined") {
+          window.removeEventListener("blur", onBlur);
+          window.removeEventListener("keydown", onKeyDown);
+          window.removeEventListener("keyup", onKeyUp);
+        }
         if (joystick) {
           joystick.destroy();
           joystick = null;
@@ -209,6 +215,7 @@ export function createLocomotionFeature(els, t) {
       setHostHidden(!isLocomotionAvailable(nextCaps));
     },
     setEnabled,
+    startMovement,
     stopMovement,
     updateMovementHint,
     refreshLabels() {
