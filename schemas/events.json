@@ -3,7 +3,7 @@
   "roleAlias": {
     "visitor": "operator"
   },
-  "clientToServer": ["join", "signal", "control", "video-quality", "hangup", "leave"],
+  "clientToServer": ["join", "signal", "control", "status", "video-quality", "hangup", "leave"],
   "serverToClient": [
     "joined",
     "peer-joined",
@@ -12,6 +12,7 @@
     "replaced",
     "signal",
     "control",
+    "status",
     "video-quality",
     "hangup",
     "error-message"

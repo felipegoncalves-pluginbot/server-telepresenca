@@ -7,6 +7,8 @@ import {
   isFlashlightAvailable,
   isHeadAvailable,
   isLocomotionAvailable,
+  isPowerAvailable,
+  isVolumeAvailable,
   normalizeCapabilities,
 } from "../../public/js/protocol/capabilities.js";
 import { compileSchema, readJson } from "../helpers/load-schema.js";
@@ -38,6 +40,15 @@ test("head look is opt-in like flashlight", () => {
   assert.equal(isHeadAvailable(cruzr), true);
   assert.equal(isHeadAvailable(flashlightRobot), false);
   assert.equal(isHeadAvailable({ head: { available: false } }), false);
+});
+
+test("battery and volume HUD are opt-in", () => {
+  assert.equal(isPowerAvailable(null), false);
+  assert.equal(isVolumeAvailable(null), false);
+  assert.equal(isPowerAvailable(cruzr), true);
+  assert.equal(isVolumeAvailable(cruzr), true);
+  assert.equal(isPowerAvailable(flashlightRobot), false);
+  assert.equal(isVolumeAvailable(flashlightRobot), false);
 });
 
 test("flashlight is opt-in", () => {

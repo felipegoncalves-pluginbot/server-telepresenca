@@ -11,7 +11,8 @@
     "video": { "$ref": "#/$defs/video" },
     "audio": { "$ref": "#/$defs/audio" },
     "flashlight": { "$ref": "#/$defs/flashlight" },
-    "head": { "$ref": "#/$defs/head" }
+    "head": { "$ref": "#/$defs/head" },
+    "power": { "$ref": "#/$defs/power" }
   },
   "$defs": {
     "locomotion": {
@@ -57,7 +58,17 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "beep": { "type": "boolean" }
+        "beep": { "type": "boolean" },
+        "volume": { "type": "boolean" },
+        "volumeMin": { "type": "integer", "minimum": 0 },
+        "volumeMax": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "power": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "available": { "type": "boolean" }
       }
     },
     "flashlight": {

@@ -31,6 +31,8 @@ export function queryDom() {
     featureHost: document.getElementById("featureHost"),
     locomotionHost: document.getElementById("locomotionHost"),
     headLookLayer: document.getElementById("headLookLayer"),
+    powerHost: document.getElementById("powerHost"),
+    volumeHost: document.getElementById("volumeHost"),
   };
 }
 
@@ -43,5 +45,7 @@ export function hostById(id, els) {
   if (id === "quality") return els.qualityPanel;
   if (id === "locomotion") return els.locomotionHost;
   if (id === "head" || id === "head-look") return els.headLookLayer;
+  if (id === "power") return els.powerHost;
+  if (id === "volume") return els.volumeHost;
   return document.querySelector(`[data-host="${id}"]`);
 }

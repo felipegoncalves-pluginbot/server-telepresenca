@@ -1,5 +1,5 @@
 /**
- * @typedef {{ operator?: string, robot?: string, robotCapabilities?: object | null }} Room
+ * @typedef {{ operator?: string, robot?: string, robotCapabilities?: object | null, lastStatus?: object | null }} Room
  * @typedef {{ roomId: string, operator: boolean, robot: boolean, robotCapabilities: object | null }} RoomState
  */
 

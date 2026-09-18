@@ -25,6 +25,7 @@
     { "action": "flashlight.on" },
     { "action": "flashlight.off" },
     { "action": "head.look", "value": { "yaw": 0.2, "pitch": -0.1 } },
-    { "action": "head.reset" }
+    { "action": "head.reset" },
+    { "action": "volume.set", "value": { "level": 5 } }
   ]
 }

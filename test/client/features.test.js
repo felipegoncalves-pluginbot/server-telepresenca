@@ -4,6 +4,8 @@ import { beepFeature } from "../../public/js/features/beep.js";
 import { flashlightFeature } from "../../public/js/features/flashlight.js";
 import { createHeadFeature } from "../../public/js/features/head.js";
 import { createLocomotionFeature } from "../../public/js/features/locomotion.js";
+import { createPowerFeature } from "../../public/js/features/power.js";
+import { createVolumeFeature } from "../../public/js/features/volume.js";
 
 test("feature widgets expose id, opt-in and availability helpers", () => {
   assert.equal(flashlightFeature.id, "flashlight");
@@ -30,4 +32,16 @@ test("feature widgets expose id, opt-in and availability helpers", () => {
   assert.equal(head.optIn, true);
   assert.equal(head.isAvailable(null), false);
   assert.equal(head.isAvailable({ head: { available: true } }), true);
+
+  const power = createPowerFeature({}, (key) => key);
+  assert.equal(power.id, "power");
+  assert.equal(power.optIn, true);
+  assert.equal(power.isAvailable(null), false);
+  assert.equal(power.isAvailable({ power: { available: true } }), true);
+
+  const volume = createVolumeFeature({}, (key) => key);
+  assert.equal(volume.id, "volume");
+  assert.equal(volume.optIn, true);
+  assert.equal(volume.isAvailable(null), false);
+  assert.equal(volume.isAvailable({ audio: { volume: true } }), true);
 });

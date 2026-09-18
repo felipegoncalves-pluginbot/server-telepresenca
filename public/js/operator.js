@@ -2,8 +2,10 @@ import { beepFeature } from "./features/beep.js";
 import { flashlightFeature } from "./features/flashlight.js";
 import { createHeadFeature } from "./features/head.js";
 import { createLocomotionFeature } from "./features/locomotion.js";
+import { createPowerFeature } from "./features/power.js";
 import { createFeatureRegistry } from "./features/registry.js";
 import { createVideoQualityFeature, savePresetId } from "./features/video-quality.js";
+import { createVolumeFeature } from "./features/volume.js";
 import { createMediaController } from "./media/local.js";
 import { normalizeCapabilities } from "./protocol/capabilities.js";
 import {
@@ -12,6 +14,7 @@ import {
   EVENT_PEER_LEFT,
   EVENT_ROOM_STATE,
   EVENT_SIGNAL,
+  EVENT_STATUS,
 } from "./protocol/events.js";
 import { createSignalingClient } from "./signaling/client.js";
 import { hostById } from "./ui/dom.js";
@@ -55,12 +58,16 @@ export function createOperator({ els, i18n, ioClient }) {
   const locomotion = createLocomotionFeature(els, t);
   const head = createHeadFeature(els, t);
   const videoQuality = createVideoQualityFeature(els, t);
+  const power = createPowerFeature(els, t);
+  const volume = createVolumeFeature(els, t);
   const registry = createFeatureRegistry([
     locomotion,
     head,
     beepFeature,
     videoQuality,
     flashlightFeature,
+    power,
+    volume,
   ]);
 
   const peer = createPeerController({
@@ -162,6 +169,7 @@ export function createOperator({ els, i18n, ioClient }) {
     if (els.btnSendCommand) els.btnSendCommand.disabled = !isConnectedFlag;
     locomotion.setEnabled(isConnectedFlag);
     head.setEnabled(isConnectedFlag);
+    volume.setEnabled(isConnectedFlag);
     const flashlightBtn = els.featureHost?.querySelector('[data-feature="flashlight"]');
     if (flashlightBtn) flashlightBtn.disabled = !isConnectedFlag;
     if (isConnectedFlag) {
@@ -186,6 +194,7 @@ export function createOperator({ els, i18n, ioClient }) {
     locomotion.refreshLabels();
     head.refreshLabels();
     videoQuality.refreshLabels();
+    registry.refreshLabels();
     media.refreshMediaButtons(connected);
     const flashlightBtn = els.featureHost?.querySelector('[data-feature="flashlight"]');
     if (flashlightBtn) {
@@ -272,6 +281,10 @@ export function createOperator({ els, i18n, ioClient }) {
         console.error(err);
         status.setRtcState("error");
       }
+    });
+
+    socket.on(EVENT_STATUS, (payload) => {
+      registry.applyStatus(payload);
     });
 
     socket.on("hangup", () => {

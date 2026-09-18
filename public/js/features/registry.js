@@ -15,6 +15,9 @@
  * @property {(caps: object | null) => boolean} isAvailable
  * @property {(ctx: FeatureContext) => (() => void) | void} mount
  * @property {(caps: object | null, ctx: FeatureContext) => void} [update]
+ * @property {(payload: unknown) => void} [onStatus]
+ * @property {() => void} [refreshLabels]
+ * @property {(enabled: boolean) => void} [setEnabled]
  */
 
 /**
@@ -23,6 +26,8 @@
 export function createFeatureRegistry(features) {
   /** @type {Map<string, () => void>} */
   const mounted = new Map();
+  /** @type {unknown} */
+  let lastStatus = null;
 
   /**
    * @param {object | null} caps
@@ -36,6 +41,9 @@ export function createFeatureRegistry(features) {
       if (shouldMount && !unmount) {
         const stop = feature.mount(nextCtx);
         mounted.set(feature.id, typeof stop === "function" ? stop : () => {});
+        if (lastStatus && typeof feature.onStatus === "function") {
+          feature.onStatus(lastStatus);
+        }
       } else if (shouldMount && unmount && typeof feature.update === "function") {
         feature.update(caps, nextCtx);
       } else if (!shouldMount && unmount) {
@@ -45,12 +53,33 @@ export function createFeatureRegistry(features) {
     }
   }
 
+  /**
+   * @param {unknown} payload
+   */
+  function applyStatus(payload) {
+    lastStatus = payload;
+    for (const feature of features) {
+      if (mounted.has(feature.id) && typeof feature.onStatus === "function") {
+        feature.onStatus(payload);
+      }
+    }
+  }
+
+  function refreshLabels() {
+    for (const feature of features) {
+      if (mounted.has(feature.id) && typeof feature.refreshLabels === "function") {
+        feature.refreshLabels();
+      }
+    }
+  }
+
   function unmountAll() {
     for (const stop of mounted.values()) {
       stop();
     }
     mounted.clear();
+    lastStatus = null;
   }
 
-  return { apply, unmountAll, isMounted: (id) => mounted.has(id) };
+  return { apply, applyStatus, refreshLabels, unmountAll, isMounted: (id) => mounted.has(id) };
 }

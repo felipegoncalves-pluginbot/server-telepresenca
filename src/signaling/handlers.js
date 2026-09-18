@@ -7,6 +7,24 @@ import {
 } from "../protocol/events.js";
 
 /**
+ * Android Socket.IO sometimes delivers JSON as a string.
+ * @param {unknown} payload
+ */
+function coerceStatusPayload(payload) {
+  if (typeof payload === "string") {
+    try {
+      payload = JSON.parse(payload);
+    } catch {
+      return null;
+    }
+  }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return null;
+  }
+  return payload;
+}
+
+/**
  * @param {import("socket.io").Server} io
  * @param {object} deps
  * @param {ReturnType<import("../rooms/store.js").createRoomStore>} deps.rooms
@@ -26,6 +44,9 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
 
     if (room[role] === socket.id) {
       delete room[role];
+      if (role === ROLE_ROBOT) {
+        delete room.lastStatus;
+      }
     }
 
     socket.to(roomId).emit("peer-left", { role, socketId: socket.id });
@@ -94,6 +115,10 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
           iceServers,
         });
 
+        if (effectiveRole === ROLE_OPERATOR && room.lastStatus) {
+          socket.emit("status", room.lastStatus);
+        }
+
         if (peerId) {
           socket.to(peerId).emit("peer-joined", {
             role: effectiveRole,
@@ -149,6 +174,24 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
         value: payload.value,
         from: ROLE_OPERATOR,
       });
+    });
+
+    socket.on("status", (payload) => {
+      const { roomId, role } = socket.data;
+      const body = coerceStatusPayload(payload);
+      if (!roomId || role !== ROLE_ROBOT || !body) {
+        return;
+      }
+
+      const room = rooms.get(roomId);
+      if (!room) return;
+
+      room.lastStatus = body;
+      rooms.set(roomId, room);
+
+      if (room.operator) {
+        io.to(room.operator).emit("status", body);
+      }
     });
 
     socket.on("video-quality", (payload) => {

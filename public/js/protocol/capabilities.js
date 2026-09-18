@@ -37,6 +37,36 @@ export function isHeadAvailable(caps) {
 }
 
 /**
+ * Battery HUD is opt-in.
+ * @param {object | null | undefined} caps
+ */
+export function isPowerAvailable(caps) {
+  return caps?.power?.available === true;
+}
+
+/**
+ * Robot speaker volume control is opt-in.
+ * @param {object | null | undefined} caps
+ */
+export function isVolumeAvailable(caps) {
+  return caps?.audio?.volume === true;
+}
+
+/**
+ * @param {object | null | undefined} caps
+ */
+export function volumeRange(caps) {
+  const min = Number.isFinite(Number(caps?.audio?.volumeMin))
+    ? Math.round(Number(caps.audio.volumeMin))
+    : 0;
+  let max = Number.isFinite(Number(caps?.audio?.volumeMax))
+    ? Math.round(Number(caps.audio.volumeMax))
+    : 10;
+  if (max <= min) max = min + 1;
+  return { min, max };
+}
+
+/**
  * @param {object | null | undefined} caps
  */
 export function headAxes(caps) {

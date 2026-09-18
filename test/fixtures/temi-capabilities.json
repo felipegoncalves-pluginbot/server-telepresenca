@@ -1,9 +1,9 @@
 {
   "locomotion": {
-    "backwardMode": "pulse",
-    "rearObstacleSensor": false,
+    "backwardMode": "continuous",
+    "rearObstacleSensor": true,
     "frontObstacleSensor": true,
-    "turnSignInverted": true,
+    "turnSignInverted": false,
     "backwardPulseDistanceM": 0.2,
     "backwardPulseCooldownMs": 400
   },
@@ -11,7 +11,7 @@
     "beep": true,
     "volume": true,
     "volumeMin": 0,
-    "volumeMax": 15
+    "volumeMax": 10
   },
   "power": {
     "available": true
@@ -65,7 +65,7 @@
   },
   "head": {
     "available": true,
-    "yaw": true,
+    "yaw": false,
     "pitch": true
   }
 }

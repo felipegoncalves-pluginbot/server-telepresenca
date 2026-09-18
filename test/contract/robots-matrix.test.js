@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "../helpers/test.js";
 import {
+  headAxes,
   isBeepAvailable,
   isContinuousBackward,
   isFlashlightAvailable,
   isHeadAvailable,
   isLocomotionAvailable,
+  isPowerAvailable,
+  isVolumeAvailable,
 } from "../../public/js/protocol/capabilities.js";
 import { compileSchema, readJson } from "../helpers/load-schema.js";
 
@@ -21,6 +24,21 @@ const robots = [
       flashlight: false,
       head: true,
       continuousBackward: false,
+      battery: true,
+      volume: true,
+    },
+  },
+  {
+    name: "temi",
+    caps: readJson("test/fixtures/temi-capabilities.json"),
+    hud: {
+      locomotion: true,
+      beep: true,
+      flashlight: false,
+      head: true,
+      continuousBackward: true,
+      battery: true,
+      volume: true,
     },
   },
   {
@@ -32,6 +50,8 @@ const robots = [
       flashlight: true,
       head: false,
       continuousBackward: true,
+      battery: false,
+      volume: false,
     },
   },
   {
@@ -43,6 +63,8 @@ const robots = [
       flashlight: false,
       head: false,
       continuousBackward: false,
+      battery: false,
+      volume: false,
     },
   },
   {
@@ -54,6 +76,8 @@ const robots = [
       flashlight: false,
       head: false,
       continuousBackward: false,
+      battery: false,
+      volume: false,
     },
   },
 ];
@@ -76,6 +100,14 @@ for (const robot of robots) {
       robot.hud.continuousBackward,
       "backward",
     );
+    assert.equal(isPowerAvailable(robot.caps), robot.hud.battery, "battery");
+    assert.equal(isVolumeAvailable(robot.caps), robot.hud.volume, "volume");
+    if (robot.name === "temi") {
+      assert.deepEqual(headAxes(robot.caps), { yaw: false, pitch: true });
+    }
+    if (robot.name === "cruzr") {
+      assert.deepEqual(headAxes(robot.caps), { yaw: true, pitch: true });
+    }
   });
 }
 
