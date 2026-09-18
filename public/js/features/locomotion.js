@@ -35,8 +35,21 @@ export function createLocomotionFeature(els, t) {
   let joystick = null;
   let activeMovement = null;
   let movementHeartbeat = null;
+  const activeKeys = new Set();
+  let activeKey = null;
   /** @type {import("./registry.js").FeatureContext | null} */
   let ctx = null;
+
+  const KEY_TO_ACTION = {
+    w: "forward",
+    arrowup: "forward",
+    s: "backward",
+    arrowdown: "backward",
+    a: "left",
+    arrowleft: "left",
+    d: "right",
+    arrowright: "right",
+  };
 
   function setHostHidden(hidden) {
     if (els.locomotionHost) els.locomotionHost.hidden = hidden;
@@ -70,6 +83,7 @@ export function createLocomotionFeature(els, t) {
     if (!action || !ctx?.isConnected()) return;
 
     if (action === "backward" && !isContinuousBackward(caps)) {
+      stopMovement(false);
       sendControl("backward", { volatile: true });
       return;
     }
@@ -109,27 +123,27 @@ export function createLocomotionFeature(els, t) {
 
   function onKeyDown(event) {
     if (!ctx?.isConnected()) return;
-    const tag = document.activeElement
-      ? document.activeElement.tagName.toLowerCase()
-      : "";
+    const tag =
+      typeof document !== "undefined" && document.activeElement
+        ? document.activeElement.tagName.toLowerCase()
+        : "";
     if (tag === "input" || tag === "textarea") return;
     if (event.repeat) return;
 
-    const key = event.key.toLowerCase();
-    let action = null;
-
-    if (key === "arrowup" || key === "w") action = "forward";
-    else if (key === "arrowdown" || key === "s") action = "backward";
-    else if (key === "arrowleft" || key === "a") action = "left";
-    else if (key === "arrowright" || key === "d") action = "right";
-    else if (key === " " || key === "escape") {
+    const key = event.key?.toLowerCase();
+    if (key === " " || key === "escape") {
       event.preventDefault();
+      activeKeys.clear();
+      activeKey = null;
       stopMovement(true);
       return;
     }
 
+    const action = KEY_TO_ACTION[key];
     if (action) {
       event.preventDefault();
+      activeKeys.add(key);
+      activeKey = key;
       setKeyFeedback(key, true);
       startMovement(action);
     }
@@ -137,26 +151,28 @@ export function createLocomotionFeature(els, t) {
 
   function onKeyUp(event) {
     if (!ctx?.isConnected()) return;
-    const key = event.key.toLowerCase();
-    if (key === "arrowdown" || key === "s") {
-      if (!isContinuousBackward(caps)) return;
-    }
-    const movementKeys = [
-      "w",
-      "s",
-      "a",
-      "d",
-      "arrowup",
-      "arrowdown",
-      "arrowleft",
-      "arrowright",
-    ];
-    if (movementKeys.includes(key)) {
-      event.preventDefault();
-      setKeyFeedback(key, false);
+    const key = event.key?.toLowerCase();
+    if (!KEY_TO_ACTION[key]) return;
+
+    event.preventDefault();
+    activeKeys.delete(key);
+    setKeyFeedback(key, false);
+
+    if (key === activeKey) {
+      if (activeKeys.size > 0) {
+        const nextKey = Array.from(activeKeys).pop();
+        activeKey = nextKey;
+        const nextAction = KEY_TO_ACTION[nextKey];
+        if (nextAction) {
+          startMovement(nextAction);
+          return;
+        }
+      }
+      activeKey = null;
       stopMovement(true);
     }
   }
+
 
   return {
     id: "locomotion",
@@ -171,22 +187,28 @@ export function createLocomotionFeature(els, t) {
       setHostHidden(false);
       updateMovementHint();
 
-      joystick = createTeleJoystick(els.joystick, {
-        onDirection(action) {
-          startMovement(action);
-          els.joystick.setAttribute(
-            "aria-valuetext",
-            t(MOVEMENT_I18N[action] || MOVEMENT_I18N.stop),
-          );
-        },
-        onEnd() {
-          stopMovement(true);
-          els.joystick.setAttribute("aria-valuetext", t(MOVEMENT_I18N.stop));
-        },
-      });
-      joystick.setEnabled(nextCtx.isConnected());
+      if (els.joystick) {
+        joystick = createTeleJoystick(els.joystick, {
+          onDirection(action) {
+            startMovement(action);
+            els.joystick.setAttribute(
+              "aria-valuetext",
+              t(MOVEMENT_I18N[action] || MOVEMENT_I18N.stop),
+            );
+          },
+          onEnd() {
+            stopMovement(true);
+            els.joystick.setAttribute("aria-valuetext", t(MOVEMENT_I18N.stop));
+          },
+        });
+        joystick.setEnabled(nextCtx.isConnected());
+      }
 
-      const onBlur = () => stopMovement(true);
+      const onBlur = () => {
+        activeKeys.clear();
+        activeKey = null;
+        stopMovement(true);
+      };
       if (typeof window !== "undefined") {
         window.addEventListener("blur", onBlur);
         window.addEventListener("keydown", onKeyDown);
@@ -194,6 +216,8 @@ export function createLocomotionFeature(els, t) {
       }
 
       return () => {
+        activeKeys.clear();
+        activeKey = null;
         stopMovement(true);
         if (typeof window !== "undefined") {
           window.removeEventListener("blur", onBlur);
@@ -217,6 +241,9 @@ export function createLocomotionFeature(els, t) {
     setEnabled,
     startMovement,
     stopMovement,
+    getActiveMovement: () => activeMovement,
+    onKeyDown,
+    onKeyUp,
     updateMovementHint,
     refreshLabels() {
       if (els.joystick) {
