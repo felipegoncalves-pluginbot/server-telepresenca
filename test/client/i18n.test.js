@@ -108,6 +108,11 @@ test("locale files share keys and interpolation tokens", () => {
   assert.deepEqual(unused, [], `unused i18n keys: ${unused.join(", ")}`);
 
   assert.ok(html.includes("js/main.js"), "operator must boot from js/main.js");
+  assert.ok(html.includes("<title>TelePlugin</title>"));
+  assert.ok(html.includes("assets/favicon.svg"));
+  assert.ok(html.includes("hud-popover"));
+  assert.ok(html.includes("hud-popover-head"));
+  assert.ok(fs.existsSync(path.join(publicDir, "assets/favicon.svg")));
   assert.ok(!html.includes("btnConnect") && !html.includes(">Conectar<"));
   assert.ok(html.includes("kbd-hint"));
   assert.ok(html.includes("assets/flags/br.png"));

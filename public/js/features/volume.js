@@ -1,5 +1,6 @@
 import { isVolumeAvailable, volumeRange } from "../protocol/capabilities.js";
 import { parseRobotStatus, parseVolumeLevel } from "../protocol/status.js";
+import { bindPopoverDismiss, createPopover } from "../ui/popover.js";
 
 const ICON = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
   <path d="M4.5 9.5h3.2L12 6.2v11.6L7.7 14.5H4.5V9.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
@@ -18,6 +19,8 @@ export function createVolumeFeature(els, t) {
   let slider = null;
   let valueEl = null;
   let panel = null;
+  let titleEl = null;
+  let closeBtn = null;
   let min = 0;
   let max = 10;
   let level = 5;
@@ -39,6 +42,8 @@ export function createVolumeFeature(els, t) {
       button.title = label();
       button.disabled = !ctx?.isConnected();
     }
+    if (titleEl) titleEl.textContent = t("volume.panel");
+    if (closeBtn) closeBtn.setAttribute("aria-label", t("dialog.close"));
     if (panel) panel.setAttribute("aria-label", t("volume.panel"));
   }
 
@@ -90,6 +95,7 @@ export function createVolumeFeature(els, t) {
       const host = nextCtx.host("volume") || els.volumeHost;
       if (!host) return () => {};
       host.hidden = false;
+      host.classList.add("popover-host");
 
       root = document.createElement("div");
       root.className = "volume-widget";
@@ -100,16 +106,21 @@ export function createVolumeFeature(els, t) {
       button.setAttribute("aria-haspopup", "dialog");
       button.setAttribute("aria-expanded", "false");
       button.innerHTML = ICON;
-      panel = document.createElement("div");
-      panel.className = "volume-panel hidden";
-      panel.setAttribute("role", "dialog");
+
+      const chrome = createPopover({ title: t("volume.panel") });
+      panel = chrome.panel;
+      titleEl = chrome.title;
+      closeBtn = chrome.closeButton;
+      panel.classList.add("volume-panel");
+      chrome.body.classList.add("volume-body");
+
       slider = document.createElement("input");
       slider.type = "range";
       slider.className = "volume-slider";
       slider.step = "1";
       valueEl = document.createElement("span");
       valueEl.className = "volume-value";
-      panel.append(slider, valueEl);
+      chrome.body.append(slider, valueEl);
       root.append(button, panel);
       host.appendChild(root);
 
@@ -123,25 +134,31 @@ export function createVolumeFeature(els, t) {
         setLevel(Number(slider.value), false);
         sendLevel(false);
       };
-      const onDoc = (event) => {
-        if (!root.contains(event.target)) setPanelOpen(false);
+      const onClose = (event) => {
+        event.preventDefault();
+        setPanelOpen(false);
       };
 
       button.addEventListener("click", onToggle);
+      closeBtn.addEventListener("click", onClose);
       slider.addEventListener("input", onInput);
       slider.addEventListener("change", onChange);
-      document.addEventListener("pointerdown", onDoc);
+      const unbindDismiss = bindPopoverDismiss(root, {
+        isOpen: () => Boolean(panel && !panel.classList.contains("hidden")),
+        setOpen: setPanelOpen,
+      });
       syncUi();
 
       return () => {
         if (sendTimer) clearTimeout(sendTimer);
         sendTimer = null;
+        unbindDismiss();
         button.removeEventListener("click", onToggle);
+        closeBtn.removeEventListener("click", onClose);
         slider.removeEventListener("input", onInput);
         slider.removeEventListener("change", onChange);
-        document.removeEventListener("pointerdown", onDoc);
         root.remove();
-        root = button = slider = valueEl = panel = null;
+        root = button = slider = valueEl = panel = titleEl = closeBtn = null;
         host.hidden = true;
         ctx = null;
       };

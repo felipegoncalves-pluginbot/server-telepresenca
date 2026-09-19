@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TelePlugin">
+  <rect width="32" height="32" rx="8" fill="#111416"/>
+  <g fill="none" stroke="#2bb0a6" stroke-width="2" stroke-linecap="round">
+    <path d="M10.6 9.8a8 8 0 0 1 10.8 0"/>
+    <path d="M12.7 12.2a4.8 4.8 0 0 1 6.6 0"/>
+    <rect x="8.5" y="14.2" width="15" height="12.6" rx="3.4"/>
+  </g>
+  <rect x="12.4" y="16.8" width="7.2" height="3.1" rx="0.7" fill="#2bb0a6"/>
+  <circle cx="13.4" cy="23.2" r="1.45" fill="#2bb0a6"/>
+  <circle cx="18.6" cy="23.2" r="1.45" fill="#2bb0a6"/>
+</svg>

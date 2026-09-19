@@ -1,5 +1,5 @@
 {
-  "app.title": "Telepresença — Operador",
+  "app.title": "TelePlugin",
   "brand.alt": "Pluginbot",
   "status.disconnected": "Desconectado",
   "status.connecting": "Conectando…",
@@ -25,6 +25,7 @@
   "power.unknown": "Bateria desconhecida",
   "volume.level": "Volume {{level}}",
   "volume.panel": "Volume do robô",
+  "dialog.close": "Fechar",
   "movement.forward": "Frente",
   "movement.backward": "Ré",
   "movement.left": "Girar à esquerda",
@@ -36,7 +37,7 @@
   "movement.hintPulse": "Frente e giros: segure. Ré: um toque ≈ {{cm}} cm.",
   "head.look": "Arraste para olhar",
   "head.layer": "Arraste para mover a cabeça do robô",
-  "head.hintKeyboard": "Arraste a imagem para olhar. IJKL olha. Duplo clique centra.",
+  "head.hintKeyboard": "Arraste a tela para olhar.",
   "room.label": "Sala {{id}}",
   "rtc.idle": "inativo",
   "rtc.connecting": "conectando",

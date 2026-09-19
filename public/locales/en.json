@@ -1,5 +1,5 @@
 {
-  "app.title": "Telepresence — Operator",
+  "app.title": "TelePlugin",
   "brand.alt": "Pluginbot",
   "status.disconnected": "Disconnected",
   "status.connecting": "Connecting…",
@@ -25,6 +25,7 @@
   "power.unknown": "Battery unknown",
   "volume.level": "Volume {{level}}",
   "volume.panel": "Robot volume",
+  "dialog.close": "Close",
   "movement.forward": "Forward",
   "movement.backward": "Reverse",
   "movement.left": "Turn left",

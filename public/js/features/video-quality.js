@@ -1,3 +1,5 @@
+import { bindPopoverDismiss } from "../ui/popover.js";
+
 const STORAGE_KEY = "telepresenca.videoQuality.v2";
 
 export const DEFAULT_PRESETS = [
@@ -360,30 +362,20 @@ export function createVideoQualityFeature(els, t) {
         els.btnVideoQuality.addEventListener("click", onQualityClick);
       }
 
-      const onDocumentClick = (event) => {
-        if (!panel?.isPanelOpen()) return;
-        const qualityRoot = els.qualityPanel;
-        const button = els.btnVideoQuality;
-        if (qualityRoot?.contains(event.target) || button?.contains(event.target)) {
-          return;
-        }
-        setPanelOpen(false);
-      };
-      document.addEventListener("click", onDocumentClick);
-
-      const onEscape = (event) => {
-        if (event.key === "Escape" && panel?.isPanelOpen()) {
-          setPanelOpen(false);
-        }
-      };
-      document.addEventListener("keydown", onEscape);
+      const host =
+        els.btnVideoQuality?.closest(".popover-host") || els.qualityPanel;
+      const unbindDismiss = host
+        ? bindPopoverDismiss(host, {
+            isOpen: () => Boolean(panel?.isPanelOpen()),
+            setOpen: setPanelOpen,
+          })
+        : () => {};
 
       return () => {
         if (els.btnVideoQuality) {
           els.btnVideoQuality.removeEventListener("click", onQualityClick);
         }
-        document.removeEventListener("click", onDocumentClick);
-        document.removeEventListener("keydown", onEscape);
+        unbindDismiss();
         setPanelOpen(false);
         panel = null;
       };
@@ -404,6 +396,9 @@ export function createVideoQualityFeature(els, t) {
       panel?.refreshLabels();
       if (els.btnVideoQuality) {
         els.btnVideoQuality.setAttribute("aria-label", t("video.openPanel"));
+      }
+      if (els.btnCloseQuality) {
+        els.btnCloseQuality.setAttribute("aria-label", t("dialog.close"));
       }
     },
     applyCapabilities(caps) {
