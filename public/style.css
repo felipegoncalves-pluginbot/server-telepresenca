@@ -749,6 +749,7 @@ body {
 }
 
 .ended-overlay {
+  --invite-primary: transparent;
   position: absolute;
   inset: 0;
   z-index: 9;
@@ -756,7 +757,7 @@ body {
   place-content: center;
   justify-items: center;
   gap: 16px;
-  background: rgba(5, 8, 12, 0.62);
+  background: color-mix(in srgb, var(--invite-primary) 22%, rgba(5, 8, 12, 0.72));
   backdrop-filter: blur(10px);
 }
 
@@ -779,6 +780,27 @@ body {
 
 .rejoin:hover {
   filter: brightness(1.05);
+}
+
+.invite-logo {
+  max-height: 72px;
+  max-width: min(280px, 70vw);
+  object-fit: contain;
+}
+
+.invite-logo.hidden {
+  display: none;
+}
+
+.invite-window {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.invite-window.hidden {
+  display: none;
 }
 
 .identify-form {

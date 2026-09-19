@@ -15,6 +15,7 @@ export const EVENT_PEER_JOINED = "peer-joined";
 export const EVENT_PEER_LEFT = "peer-left";
 export const EVENT_ROOM_STATE = "room-state";
 export const EVENT_REPLACED = "replaced";
+export const EVENT_SESSION_EXPIRED = "session-expired";
 export const EVENT_ERROR_MESSAGE = "error-message";
 
 export const SIGNAL_OFFER = "offer";
@@ -37,6 +38,7 @@ export const SERVER_TO_CLIENT = [
   EVENT_PEER_LEFT,
   EVENT_ROOM_STATE,
   EVENT_REPLACED,
+  EVENT_SESSION_EXPIRED,
   EVENT_SIGNAL,
   EVENT_CONTROL,
   EVENT_STATUS,

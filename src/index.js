@@ -49,6 +49,9 @@ server.listen(config.port, "0.0.0.0", () => {
     log.info(`  Rede:    http://${ip}:${config.port}`);
   }
   log.info(`  ICE:     ${iceServers.length} server(s)`);
+  log.info(
+    `  Robots:  ${config.robotsApiUrl || "(ROBOTS_API_URL não definido)"}`,
+  );
   log.info("========================================");
   log.info("  Abra o front no notebook e use o IP");
   log.info("  acima no app Android.");

@@ -6,6 +6,12 @@ import {
   ROLE_ROBOT,
 } from "../protocol/events.js";
 import { isExpired, parseExpiresAt } from "../rooms/expiry.js";
+import {
+  clearExpiryTimer,
+  EVENT_SESSION_EXPIRED,
+  expiryDelayMs,
+  occupantSockets,
+} from "../rooms/lifecycle.js";
 
 /**
  * Android Socket.IO sometimes delivers JSON as a string.
@@ -33,6 +39,54 @@ function coerceStatusPayload(payload) {
  * @param {ReturnType<import("../log.js").createLogger>} deps.log
  */
 export function attachSignaling(io, { rooms, iceServers, log }) {
+  function kickSocket(socket, event, payload) {
+    if (!socket) return;
+    const previousRoom = socket.data.roomId;
+    const previousRole = socket.data.role;
+    if (previousRoom && previousRole) {
+      socket.to(previousRoom).emit("peer-left", {
+        role: previousRole,
+        socketId: socket.id,
+      });
+    }
+    socket.emit(event, payload);
+    socket.data.roomId = undefined;
+    socket.data.role = undefined;
+    if (payload && payload.roomId) {
+      socket.leave(payload.roomId);
+    } else if (previousRoom) {
+      socket.leave(previousRoom);
+    }
+    socket.disconnect(true);
+  }
+
+  function expireRoom(roomId) {
+    const room = rooms.get(roomId);
+    if (!room) return;
+    clearExpiryTimer(room);
+    for (const occupant of occupantSockets(room)) {
+      kickSocket(io.sockets.sockets.get(occupant.socketId), EVENT_SESSION_EXPIRED, {
+        roomId,
+        reason: EVENT_SESSION_EXPIRED,
+      });
+    }
+    rooms.delete(roomId);
+  }
+
+  function armRoomExpiry(roomId) {
+    const room = rooms.get(roomId);
+    if (!room) return;
+    clearExpiryTimer(room);
+    const delay = expiryDelayMs(room.expiresAt);
+    if (delay == null) return;
+    if (delay <= 0) {
+      expireRoom(roomId);
+      return;
+    }
+    room.expiryTimer = setTimeout(() => expireRoom(roomId), delay);
+    rooms.set(roomId, room);
+  }
+
   /**
    * @param {import("socket.io").Socket} socket
    */
@@ -54,6 +108,7 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
     socket.leave(roomId);
 
     if (!room.operator && !room.robot) {
+      clearExpiryTimer(room);
       rooms.delete(roomId);
     } else {
       rooms.set(roomId, room);
@@ -99,12 +154,7 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
         }
         if (room[effectiveRole] && room[effectiveRole] !== socket.id) {
           const previous = io.sockets.sockets.get(room[effectiveRole]);
-          if (previous) {
-            previous.emit("replaced", { role: effectiveRole });
-            previous.data.roomId = undefined;
-            previous.data.role = undefined;
-            previous.leave(roomId);
-          }
+          kickSocket(previous, "replaced", { role: effectiveRole, roomId });
         }
 
         room[effectiveRole] = socket.id;
@@ -140,6 +190,7 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
         }
 
         io.to(roomId).emit("room-state", rooms.state(roomId));
+        armRoomExpiry(roomId);
         log.info(`[*] ${socket.id} joined room=${roomId} as ${effectiveRole}`);
 
         if (typeof ack === "function") {

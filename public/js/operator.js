@@ -12,13 +12,21 @@ import {
   EVENT_JOINED,
   EVENT_PEER_JOINED,
   EVENT_PEER_LEFT,
+  EVENT_REPLACED,
   EVENT_ROOM_STATE,
+  EVENT_SESSION_EXPIRED,
   EVENT_SIGNAL,
   EVENT_STATUS,
 } from "./protocol/events.js";
 import { createSignalingClient } from "./signaling/client.js";
 import { hostById } from "./ui/dom.js";
 import { createSessionCountdown } from "./invite/countdown.js";
+import {
+  endedOverlayState,
+  isTransientDisconnect,
+  paintCallEnded,
+  RECONNECT_GRACE_MS,
+} from "./invite/reconnect.js";
 import { bindLangSwitch } from "./ui/lang-switch.js";
 import { createStatus } from "./ui/status.js";
 import { fetchIceServers } from "./webrtc/ice.js";
@@ -56,11 +64,18 @@ export function createOperator({
   const signaling = createSignalingClient(ioClient);
 
   const roomId = roomIdOption || resolveRoomId();
-  let expireTimer = null;
+  const inviteBound = typeof beforeConnect === "function";
+  let graceTimer = null;
+  let endedByExpiry = false;
+  let endedByReplace = false;
   const countdown = createSessionCountdown({
     els,
     t,
     expiresAt,
+    onExpired() {
+      endedByExpiry = true;
+      disconnect({ ended: true });
+    },
   });
   let iceServers = [];
   let connected = false;
@@ -220,40 +235,41 @@ export function createOperator({
     }
   }
 
-  function clearExpireTimer() {
-    if (expireTimer) {
-      clearTimeout(expireTimer);
-      expireTimer = null;
+  function clearGrace() {
+    if (graceTimer) {
+      clearTimeout(graceTimer);
+      graceTimer = null;
     }
-    countdown.stop();
   }
 
-  function armExpireTimer() {
-    clearExpireTimer();
-    countdown.start();
-    if (!expiresAt) return;
-    const ms = Date.parse(String(expiresAt)) - Date.now();
-    if (!Number.isFinite(ms)) return;
-    if (ms <= 0) {
-      disconnect({ ended: true });
-      status.setStatus("invite.sessionExpired", "");
-      return;
-    }
-    expireTimer = setTimeout(() => {
-      disconnect({ ended: true });
-      status.setStatus("invite.sessionExpired", "");
-      if (els.endedOverlay) {
-        const text = els.endedOverlay.querySelector("p");
-        if (text) {
-          text.dataset.i18n = "invite.sessionExpired";
-          text.textContent = t("invite.sessionExpired");
-        }
-      }
-    }, ms);
+  function paintEnded(flags = {}) {
+    paintCallEnded(
+      endedOverlayState({
+        expired: endedByExpiry,
+        replaced: endedByReplace,
+        inviteBound,
+        expiresAt,
+        ...flags,
+      }),
+      status,
+      els,
+      t,
+    );
   }
 
-  async function connect() {
-    if (signaling.getSocket() || connecting) return;
+  function armGrace() {
+    clearGrace();
+    graceTimer = setTimeout(() => {
+      paintEnded({ transient: false });
+    }, RECONNECT_GRACE_MS);
+  }
+
+  async function connect({ force = false } = {}) {
+    if (endedByExpiry || connecting) return;
+    if (signaling.getSocket()) {
+      if (!force) return;
+      signaling.disconnectSocket();
+    }
     if (typeof beforeConnect === "function") {
       const allowed = await beforeConnect();
       if (allowed === false) return;
@@ -280,12 +296,16 @@ export function createOperator({
     const socket = signaling.connect();
 
     socket.on("connect", async () => {
+      if (endedByExpiry) return;
+      endedByReplace = false;
+      clearGrace();
       status.setStatus("status.connected", "online");
       const ack = await signaling.join(
         roomId,
         expiresAt ? { expiresAt } : {},
       );
       if (ack && !ack.ok) {
+        if (String(ack.error || "").includes("expired")) endedByExpiry = true;
         status.setStatus("status.joinFailed", "");
         disconnect({ ended: true });
         return;
@@ -300,7 +320,7 @@ export function createOperator({
         iceServers = payload.iceServers;
       }
       setConnectedUi(true);
-      armExpireTimer();
+      countdown.start();
       status.setPlaceholder("status.waitingRobot");
       status.setStatus("status.waitingRobot", "online");
       if (payload?.robotCapabilities) {
@@ -351,26 +371,46 @@ export function createOperator({
       status.setStatus("status.endedByRobot", "online");
     });
 
-    socket.on("disconnect", () => {
-      locomotion.stopMovement(true);
-      status.setStatus("status.disconnected", "");
-      setConnectedUi(false);
+    socket.on(EVENT_REPLACED, () => {
+      endedByReplace = true;
+      clearGrace();
       peer.cleanupPeer();
-      status.showEnded(true);
+      paintEnded({ replaced: true });
+    });
+
+    socket.on(EVENT_SESSION_EXPIRED, () => {
+      endedByExpiry = true;
+      disconnect({ ended: true });
+    });
+
+    socket.on("disconnect", (reason) => {
+      locomotion.stopMovement(true);
+      peer.cleanupPeer();
+      setConnectedUi(false);
+      if (endedByExpiry) {
+        paintEnded({ expired: true });
+        return;
+      }
+      if (endedByReplace || !isTransientDisconnect(reason)) {
+        paintEnded({ replaced: endedByReplace, transient: false });
+        return;
+      }
+      paintEnded({ transient: true });
+      armGrace();
     });
   }
 
   function disconnect({ ended = true } = {}) {
-    clearExpireTimer();
+    clearGrace();
+    countdown.stop();
     locomotion.stopMovement(true);
     videoQuality.setPanelOpen(false);
     signaling.hangupAndLeave();
     peer.cleanupPeer();
     media.stopLocal();
     setConnectedUi(false);
-    status.setStatus("status.disconnected", "");
     media.refreshMediaButtons(false);
-    if (ended) status.showEnded(true);
+    if (ended) paintEnded({ expired: endedByExpiry, replaced: endedByReplace });
   }
 
   function bind() {
@@ -378,7 +418,9 @@ export function createOperator({
 
     els.btnHangup.addEventListener("click", () => disconnect({ ended: true }));
     els.btnRejoin.addEventListener("click", () => {
-      connect().catch((err) => console.error(err));
+      endedByExpiry = false;
+      endedByReplace = false;
+      connect({ force: true }).catch((err) => console.error(err));
     });
     els.btnToggleMic.addEventListener("click", () => {
       media.toggleMic(connected).catch((err) => console.error(err));

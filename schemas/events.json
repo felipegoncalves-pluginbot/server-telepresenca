@@ -10,6 +10,7 @@
     "peer-left",
     "room-state",
     "replaced",
+    "session-expired",
     "signal",
     "control",
     "status",

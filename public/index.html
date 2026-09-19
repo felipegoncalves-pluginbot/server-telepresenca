@@ -364,7 +364,9 @@
         </div>
 
         <div id="inviteOverlay" class="ended-overlay hidden">
+          <img id="inviteLogo" class="invite-logo hidden" alt="" />
           <p id="inviteOverlayText" data-i18n="invite.expired">Convite expirado</p>
+          <p id="inviteWindow" class="invite-window hidden"></p>
           <form id="identifyForm" class="identify-form hidden">
             <p id="identifyDescription" class="identify-description hidden"></p>
             <input
@@ -381,10 +383,22 @@
             >
               Identificação inválida
             </p>
-            <button type="submit" class="rejoin" data-i18n="invite.identifySubmit">
+            <button
+              type="submit"
+              class="rejoin hidden"
+              data-i18n="invite.identifySubmit"
+            >
               Continuar
             </button>
           </form>
+          <button
+            id="inviteEnter"
+            class="rejoin hidden"
+            type="button"
+            data-i18n="invite.enter"
+          >
+            Entrar
+          </button>
         </div>
       </div>
     </div>

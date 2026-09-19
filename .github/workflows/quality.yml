@@ -14,7 +14,15 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
-      - run: npm run ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run dup
+      - run: npm run semgrep
+      - run: npm run arch
+      - run: npm run deps
+      - run: npm run audit
       - uses: google/osv-scanner-action/osv-scanner-action@v2.5.1
         with:
           scan-args: |-

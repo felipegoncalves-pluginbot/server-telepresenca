@@ -14,7 +14,12 @@ export function createSignalingClient(ioClient) {
   let socket = null;
 
   function connect() {
-    socket = ioClient({ transports: ["websocket", "polling"] });
+    socket = ioClient({
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 4000,
+    });
     return socket;
   }
 

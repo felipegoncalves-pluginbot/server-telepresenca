@@ -1,5 +1,5 @@
 /**
- * @typedef {{ operator?: string, robot?: string, robotCapabilities?: object | null, lastStatus?: object | null }} Room
+ * @typedef {{ operator?: string, robot?: string, robotCapabilities?: object | null, lastStatus?: object | null, expiresAt?: number | null, expiryTimer?: ReturnType<typeof setTimeout> | null }} Room
  * @typedef {{ roomId: string, operator: boolean, robot: boolean, robotCapabilities: object | null }} RoomState
  */
 

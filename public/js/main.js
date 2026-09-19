@@ -1,5 +1,5 @@
 import { i18n } from "./i18n/index.js";
-import { createInviteRejoin, runInviteGate } from "./invite/gate.js";
+import { createInviteRejoin, runInviteGate, showInviteMessage } from "./invite/gate.js";
 import { createOperator } from "./operator.js";
 import { queryDom } from "./ui/dom.js";
 
@@ -19,7 +19,11 @@ async function boot() {
     ioClient: io,
     roomId: session ? session.roomId : undefined,
     expiresAt: session ? session.expiresAt : null,
-    beforeConnect: createInviteRejoin(session),
+    beforeConnect: createInviteRejoin(session, {
+      onDenied(key) {
+        showInviteMessage(els, (item) => i18n.t(item), key);
+      },
+    }),
   });
   operator.bind();
   await operator.connect();
