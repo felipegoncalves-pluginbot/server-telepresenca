@@ -46,6 +46,7 @@
             <span class="room-label" id="roomLabel"></span>
           </div>
           <div class="hud-top-right">
+            <div id="sessionCountdown" class="session-countdown" hidden></div>
             <div id="powerHost" class="power-host" data-host="power" hidden></div>
             <div
               class="status-chip"
@@ -351,6 +352,26 @@
           <button id="btnRejoin" class="rejoin" type="button" data-i18n="call.rejoin">
             Entrar novamente
           </button>
+        </div>
+
+        <div id="inviteOverlay" class="ended-overlay hidden">
+          <p id="inviteOverlayText" data-i18n="invite.expired">Convite expirado</p>
+          <form id="identifyForm" class="identify-form hidden">
+            <p id="identifyDescription" class="identify-description hidden"></p>
+            <input
+              id="identifyInput"
+              class="identify-input"
+              type="text"
+              autocomplete="off"
+              data-i18n-aria="invite.identifyTitle"
+            />
+            <p id="identifyError" class="identify-error hidden" data-i18n="invite.identifyError">
+              Identificação inválida
+            </p>
+            <button type="submit" class="rejoin" data-i18n="invite.identifySubmit">
+              Continuar
+            </button>
+          </form>
         </div>
       </div>
     </div>

@@ -15,8 +15,10 @@ test("loadConfig reads PORT and ICE lists from an env object", () => {
     TURN_USERNAME: "user",
     TURN_CREDENTIAL: "secret",
     CORS_ORIGIN: "*",
+    ROBOTS_API_URL: "http://localhost:3333/",
   });
   assert.equal(config.port, 5050);
+  assert.equal(config.robotsApiUrl, "http://localhost:3333");
   assert.deepEqual(config.stunUrls, ["stun:example:80"]);
   assert.equal(config.turnUrls.length, 2);
   assert.equal(config.turnUsername, "user");

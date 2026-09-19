@@ -36,6 +36,7 @@ export function loadEnvFile(env = process.env) {
  * @property {string[]} turnUrls
  * @property {string} turnUsername
  * @property {string} turnCredential
+ * @property {string} robotsApiUrl
  */
 
 /**
@@ -58,6 +59,7 @@ export function loadConfig(env = process.env) {
     turnUrls: splitCsv(env.TURN_URLS),
     turnUsername: env.TURN_USERNAME || "",
     turnCredential: env.TURN_CREDENTIAL || "",
+    robotsApiUrl: (env.ROBOTS_API_URL || "").replace(/\/$/, ""),
   };
 }
 

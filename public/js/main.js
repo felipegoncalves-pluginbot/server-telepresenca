@@ -1,4 +1,5 @@
 import { i18n } from "./i18n/index.js";
+import { createInviteRejoin, runInviteGate } from "./invite/gate.js";
 import { createOperator } from "./operator.js";
 import { queryDom } from "./ui/dom.js";
 
@@ -9,7 +10,17 @@ async function boot() {
   await i18n.init();
   i18n.apply();
   const els = queryDom();
-  const operator = createOperator({ els, i18n, ioClient: io });
+  const session = await runInviteGate({ els, i18n });
+  if (session === false) return;
+
+  const operator = createOperator({
+    els,
+    i18n,
+    ioClient: io,
+    roomId: session ? session.roomId : undefined,
+    expiresAt: session ? session.expiresAt : null,
+    beforeConnect: createInviteRejoin(session),
+  });
   operator.bind();
   await operator.connect();
 }

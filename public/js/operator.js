@@ -18,6 +18,7 @@ import {
 } from "./protocol/events.js";
 import { createSignalingClient } from "./signaling/client.js";
 import { hostById } from "./ui/dom.js";
+import { createSessionCountdown } from "./invite/countdown.js";
 import { bindLangSwitch } from "./ui/lang-switch.js";
 import { createStatus } from "./ui/status.js";
 import { fetchIceServers } from "./webrtc/ice.js";
@@ -41,13 +42,26 @@ function resolveRoomId() {
  * @param {import("./i18n/index.js").i18n} options.i18n
  * @param {typeof io} options.ioClient
  */
-export function createOperator({ els, i18n, ioClient }) {
+export function createOperator({
+  els,
+  i18n,
+  ioClient,
+  roomId: roomIdOption,
+  expiresAt = null,
+  beforeConnect = null,
+}) {
   const t = (key, vars) => i18n.t(key, vars);
   const status = createStatus(els, t);
   const lang = bindLangSwitch(els, i18n);
   const signaling = createSignalingClient(ioClient);
 
-  const roomId = resolveRoomId();
+  const roomId = roomIdOption || resolveRoomId();
+  let expireTimer = null;
+  const countdown = createSessionCountdown({
+    els,
+    t,
+    expiresAt,
+  });
   let iceServers = [];
   let connected = false;
   let connecting = false;
@@ -194,6 +208,7 @@ export function createOperator({ els, i18n, ioClient }) {
       els.btnSendCommand.setAttribute("aria-label", t("media.beep"));
     }
     lang.updateLangFlag();
+    countdown.paint();
     locomotion.refreshLabels();
     head.refreshLabels();
     videoQuality.refreshLabels();
@@ -205,8 +220,44 @@ export function createOperator({ els, i18n, ioClient }) {
     }
   }
 
+  function clearExpireTimer() {
+    if (expireTimer) {
+      clearTimeout(expireTimer);
+      expireTimer = null;
+    }
+    countdown.stop();
+  }
+
+  function armExpireTimer() {
+    clearExpireTimer();
+    countdown.start();
+    if (!expiresAt) return;
+    const ms = Date.parse(String(expiresAt)) - Date.now();
+    if (!Number.isFinite(ms)) return;
+    if (ms <= 0) {
+      disconnect({ ended: true });
+      status.setStatus("invite.sessionExpired", "");
+      return;
+    }
+    expireTimer = setTimeout(() => {
+      disconnect({ ended: true });
+      status.setStatus("invite.sessionExpired", "");
+      if (els.endedOverlay) {
+        const text = els.endedOverlay.querySelector("p");
+        if (text) {
+          text.dataset.i18n = "invite.sessionExpired";
+          text.textContent = t("invite.sessionExpired");
+        }
+      }
+    }, ms);
+  }
+
   async function connect() {
     if (signaling.getSocket() || connecting) return;
+    if (typeof beforeConnect === "function") {
+      const allowed = await beforeConnect();
+      if (allowed === false) return;
+    }
     connecting = true;
     status.showEnded(false);
     status.setPlaceholder("status.connecting");
@@ -230,7 +281,10 @@ export function createOperator({ els, i18n, ioClient }) {
 
     socket.on("connect", async () => {
       status.setStatus("status.connected", "online");
-      const ack = await signaling.join(roomId);
+      const ack = await signaling.join(
+        roomId,
+        expiresAt ? { expiresAt } : {},
+      );
       if (ack && !ack.ok) {
         status.setStatus("status.joinFailed", "");
         disconnect({ ended: true });
@@ -246,6 +300,7 @@ export function createOperator({ els, i18n, ioClient }) {
         iceServers = payload.iceServers;
       }
       setConnectedUi(true);
+      armExpireTimer();
       status.setPlaceholder("status.waitingRobot");
       status.setStatus("status.waitingRobot", "online");
       if (payload?.robotCapabilities) {
@@ -306,6 +361,7 @@ export function createOperator({ els, i18n, ioClient }) {
   }
 
   function disconnect({ ended = true } = {}) {
+    clearExpireTimer();
     locomotion.stopMovement(true);
     videoQuality.setPanelOpen(false);
     signaling.hangupAndLeave();
@@ -333,6 +389,7 @@ export function createOperator({ els, i18n, ioClient }) {
 
     document.addEventListener("localechange", refreshDynamicText);
     refreshDynamicText();
+    countdown.start();
   }
 
   return { bind, connect, disconnect, roomId };

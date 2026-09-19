@@ -32,6 +32,7 @@ test("/health and /ice-servers are served from the signaling app", async () => {
   const app = createApp({
     publicDir: path.join(ROOT, "public"),
     iceServers,
+    robotsApiUrl: "",
   });
   const server = http.createServer(app);
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -50,6 +51,10 @@ test("/health and /ice-servers are served from the signaling app", async () => {
     assert.equal(ice.headers["cache-control"], "no-store");
     const iceBody = JSON.parse(ice.body);
     assert.deepEqual(iceBody.iceServers, iceServers);
+
+    const cfg = await request(`${base}/config`);
+    assert.equal(cfg.statusCode, 200);
+    assert.equal(JSON.parse(cfg.body).robotsApiUrl, "");
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

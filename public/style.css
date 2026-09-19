@@ -163,6 +163,43 @@ body {
   gap: 8px;
 }
 
+.session-countdown {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  min-width: 3.1rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  text-align: center;
+  color: rgba(243, 247, 251, 0.7);
+  background: var(--hud);
+  border: 1px solid var(--hud-border);
+  backdrop-filter: blur(12px);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+
+.session-countdown[hidden] {
+  display: none;
+}
+
+.session-countdown[data-urgency="warn"] {
+  color: #ffcc80;
+  border-color: rgba(255, 171, 64, 0.4);
+}
+
+.session-countdown[data-urgency="critical"] {
+  color: #ff8a80;
+  border-color: rgba(229, 57, 53, 0.45);
+  animation: countdown-breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes countdown-breathe {
+  50% {
+    opacity: 0.72;
+  }
+}
+
 .power-host {
   display: flex;
   align-items: center;
@@ -697,6 +734,41 @@ body {
 
 .rejoin:hover {
   filter: brightness(1.05);
+}
+
+.identify-form {
+  display: grid;
+  gap: 12px;
+  width: min(360px, calc(100vw - 48px));
+  justify-items: stretch;
+}
+
+.identify-form.hidden {
+  display: none;
+}
+
+.identify-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.identify-input {
+  appearance: none;
+  border: 1px solid var(--hud-border);
+  border-radius: 12px;
+  background: rgba(12, 16, 22, 0.85);
+  color: var(--text);
+  font-size: 1rem;
+  padding: 12px 14px;
+}
+
+.identify-error {
+  margin: 0;
+  color: #ff8a80;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 @media (max-width: 720px), (pointer: coarse) {

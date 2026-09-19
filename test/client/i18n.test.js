@@ -97,7 +97,7 @@ test("locale files share keys and interpolation tokens", () => {
 
   const usedKeys = new Set([...htmlKeys, ...codeKeys]);
   for (const match of jsSources.matchAll(
-    /["']((?:status|call|media|movement|room|rtc|brand|app|lang|video|power|volume)[.][^"']+)["']/g,
+    /["']((?:status|call|media|movement|room|rtc|brand|app|lang|video|power|volume|invite)[.][^"']+)["']/g,
   )) {
     usedKeys.add(match[1]);
   }

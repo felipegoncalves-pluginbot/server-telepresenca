@@ -18,12 +18,16 @@ export function createSignalingClient(ioClient) {
     return socket;
   }
 
-  function join(roomId) {
+  function join(roomId, extra = {}) {
     if (!socket) return;
     return new Promise((resolve) => {
-      socket.emit(EVENT_JOIN, { roomId, role: ROLE_OPERATOR }, (ack) => {
-        resolve(ack);
-      });
+      socket.emit(
+        EVENT_JOIN,
+        { roomId, role: ROLE_OPERATOR, ...extra },
+        (ack) => {
+          resolve(ack);
+        },
+      );
     });
   }
 

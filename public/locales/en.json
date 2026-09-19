@@ -56,5 +56,15 @@
   "video.preset.low": "Eco",
   "video.preset.mid": "Std",
   "video.preset.high": "High",
-  "video.preset.max": "Max"
+  "video.preset.max": "Max",
+  "invite.expired": "This invite has expired",
+  "invite.notStarted": "This invite has not started yet",
+  "invite.notFound": "Invite not found",
+  "invite.unavailable": "Unable to open this invite",
+  "invite.missingApi": "Platform server is not configured",
+  "invite.sessionExpired": "The invite time has ended",
+  "invite.identifyTitle": "Identify yourself to join",
+  "invite.identifySubmit": "Continue",
+  "invite.identifyError": "Invalid identification",
+  "invite.timeLeft": "{{time}}"
 }

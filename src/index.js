@@ -19,6 +19,7 @@ const app = createApp({
   publicDir: path.join(ROOT_DIR, "public"),
   iceServers,
   corsOrigin: config.corsOrigin,
+  robotsApiUrl: config.robotsApiUrl,
 });
 const server = http.createServer(app);
 const io = createIo(server, config.corsOrigin);

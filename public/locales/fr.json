@@ -56,5 +56,15 @@
   "video.preset.low": "Éco",
   "video.preset.mid": "Std",
   "video.preset.high": "Haute",
-  "video.preset.max": "Max"
+  "video.preset.max": "Max",
+  "invite.expired": "Cette invitation a expiré",
+  "invite.notStarted": "Cette invitation n'a pas encore commencé",
+  "invite.notFound": "Invitation introuvable",
+  "invite.unavailable": "Impossible d'ouvrir l'invitation",
+  "invite.missingApi": "Le serveur de la plateforme n'est pas configuré",
+  "invite.sessionExpired": "Le temps de l'invitation est écoulé",
+  "invite.identifyTitle": "Identifiez-vous pour rejoindre",
+  "invite.identifySubmit": "Continuer",
+  "invite.identifyError": "Identification invalide",
+  "invite.timeLeft": "{{time}}"
 }

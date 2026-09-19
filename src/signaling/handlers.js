@@ -5,6 +5,7 @@ import {
   ROLE_OPERATOR,
   ROLE_ROBOT,
 } from "../protocol/events.js";
+import { isExpired, parseExpiresAt } from "../rooms/expiry.js";
 
 /**
  * Android Socket.IO sometimes delivers JSON as a string.
@@ -66,7 +67,8 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
   io.on("connection", (socket) => {
     log.info(`[+] connected ${socket.id}`);
 
-    socket.on("join", ({ roomId, role, capabilities }, ack) => {
+    socket.on("join", (payload, ack) => {
+      const { roomId, role, capabilities } = payload || {};
       try {
         if (!roomId || typeof roomId !== "string") {
           throw new Error("roomId inválido");
@@ -79,6 +81,15 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
         leaveRoom(socket);
 
         const room = rooms.ensure(roomId);
+        const incomingExpiry = parseExpiresAt(
+          payload && payload.expiresAt != null ? payload.expiresAt : payload?.expires_at,
+        );
+        if (isExpired(incomingExpiry) || isExpired(room.expiresAt)) {
+          throw new Error("session expired");
+        }
+        if (incomingExpiry) {
+          room.expiresAt = incomingExpiry;
+        }
         if (
           effectiveRole === ROLE_ROBOT &&
           capabilities &&
