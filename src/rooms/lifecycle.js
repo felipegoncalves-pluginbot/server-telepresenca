@@ -26,6 +26,7 @@ export function shouldExpireRoom(expiresAt, now = Date.now()) {
  */
 export function occupantSockets(room) {
   if (!room) return [];
+  /** @type {Array<{ role: "operator" | "robot", socketId: string }>} */
   const out = [];
   if (room.operator) out.push({ role: "operator", socketId: room.operator });
   if (room.robot) out.push({ role: "robot", socketId: room.robot });

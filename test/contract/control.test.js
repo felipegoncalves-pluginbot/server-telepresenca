@@ -11,6 +11,12 @@ test("stable locomotion and beep actions validate", () => {
   }
 });
 
+test("namespaced ring actions validate", () => {
+  for (const action of ["ring.start", "ring.stop", "ring.toggle"]) {
+    assert.equal(validate({ action }), true, action);
+  }
+});
+
 test("namespaced flashlight actions validate", () => {
   for (const action of ["flashlight.on", "flashlight.off", "flashlight.toggle"]) {
     assert.equal(validate({ action }), true, action);

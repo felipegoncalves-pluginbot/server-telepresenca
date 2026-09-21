@@ -20,6 +20,8 @@
   "media.camOn": "Desligar câmera",
   "media.camOff": "Ligar câmera",
   "media.beep": "Enviar comando ao robô",
+  "media.ringStart": "Tocar chamada no robô",
+  "media.ringStop": "Parar toque de chamada",
   "media.flashlight": "Lanterna",
   "power.level": "Bateria {{pct}}%",
   "power.charging": "Carregando {{pct}}%",

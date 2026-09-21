@@ -208,6 +208,7 @@ export function createOperator({
       status.showEnded(false);
     } else {
       videoQuality.setPanelOpen(false);
+      registry.setEnabled?.(false);
     }
   }
 
@@ -219,8 +220,8 @@ export function createOperator({
     }
     els.roomLabel.textContent = t("room.label", { id: roomId });
     els.btnHangup.setAttribute("aria-label", t("call.hangup"));
-    if (els.btnSendCommand) {
-      els.btnSendCommand.setAttribute("aria-label", t("media.beep"));
+    if (els.btnSendCommand && !registry.isMounted("beep")) {
+      els.btnSendCommand.setAttribute("aria-label", t("media.ringStart"));
     }
     lang.updateLangFlag();
     countdown.paint();
@@ -300,10 +301,7 @@ export function createOperator({
       endedByReplace = false;
       clearGrace();
       status.setStatus("status.connected", "online");
-      const ack = await signaling.join(
-        roomId,
-        expiresAt ? { expiresAt } : {},
-      );
+      const ack = await signaling.join(roomId, expiresAt ? { expiresAt } : {});
       if (ack && !ack.ok) {
         if (String(ack.error || "").includes("expired")) endedByExpiry = true;
         status.setStatus("status.joinFailed", "");

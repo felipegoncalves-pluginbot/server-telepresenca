@@ -1,7 +1,7 @@
 /**
  * Robot → operator telemetry (battery + volume).
  *
- * @param {unknown} payload
+ * @param {any} payload
  */
 export function parseRobotStatus(payload) {
   if (!payload || typeof payload !== "object") {
@@ -14,7 +14,7 @@ export function parseRobotStatus(payload) {
 }
 
 /**
- * @param {unknown} raw
+ * @param {any} raw
  */
 function parsePower(raw) {
   if (!raw || typeof raw !== "object") return null;
@@ -27,7 +27,7 @@ function parsePower(raw) {
 }
 
 /**
- * @param {unknown} raw
+ * @param {any} raw
  */
 function parseAudio(raw) {
   if (!raw || typeof raw !== "object") return null;
@@ -44,7 +44,7 @@ function parseAudio(raw) {
 }
 
 /**
- * @param {unknown} value
+ * @param {any} value
  * @param {number} min
  * @param {number} max
  * @param {number} fallback

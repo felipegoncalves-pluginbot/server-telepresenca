@@ -20,6 +20,8 @@
   "media.camOn": "Turn camera off",
   "media.camOff": "Turn camera on",
   "media.beep": "Send command to the robot",
+  "media.ringStart": "Ring call on robot",
+  "media.ringStop": "Stop call ring",
   "media.flashlight": "Flashlight",
   "power.level": "Battery {{pct}}%",
   "power.charging": "Charging {{pct}}%",

@@ -731,6 +731,51 @@ body {
   opacity: 1;
 }
 
+.ctrl.is-ringing:not(:disabled) {
+  background: rgba(245, 158, 11, 0.9);
+  border-color: rgba(251, 191, 36, 0.8);
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  animation: ring-pulse 1.4s infinite;
+}
+
+.ctrl.is-ringing:not(:disabled) svg {
+  animation: phone-wobble 0.9s infinite ease-in-out;
+}
+
+@keyframes ring-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes phone-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  15% {
+    transform: rotate(-14deg) scale(1.08);
+  }
+  30% {
+    transform: rotate(14deg) scale(1.08);
+  }
+  45% {
+    transform: rotate(-10deg) scale(1.05);
+  }
+  60% {
+    transform: rotate(10deg) scale(1.05);
+  }
+  75% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
 .ctrl.hangup {
   margin-left: 10px;
   background: linear-gradient(180deg, var(--danger), var(--danger-dim));
@@ -856,6 +901,8 @@ body {
   }
 
   .move-hud {
+    left: auto;
+    right: max(12px, env(safe-area-inset-right));
     bottom: calc(96px + env(safe-area-inset-bottom));
   }
 

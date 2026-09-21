@@ -73,6 +73,14 @@ export function createFeatureRegistry(features) {
     }
   }
 
+  function setEnabled(enabled) {
+    for (const feature of features) {
+      if (mounted.has(feature.id) && typeof feature.setEnabled === "function") {
+        feature.setEnabled(enabled);
+      }
+    }
+  }
+
   function unmountAll() {
     for (const stop of mounted.values()) {
       stop();
@@ -81,5 +89,12 @@ export function createFeatureRegistry(features) {
     lastStatus = null;
   }
 
-  return { apply, applyStatus, refreshLabels, unmountAll, isMounted: (id) => mounted.has(id) };
+  return {
+    apply,
+    applyStatus,
+    refreshLabels,
+    setEnabled,
+    unmountAll,
+    isMounted: (id) => mounted.has(id),
+  };
 }
