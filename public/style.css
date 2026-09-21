@@ -239,28 +239,39 @@ body {
 }
 
 .status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 6px 12px;
   border-radius: 999px;
   background: var(--hud);
   border: 1px solid var(--hud-border);
   backdrop-filter: blur(12px);
-  color: var(--muted);
+  color: rgba(243, 247, 251, 0.86);
   font-size: 0.78rem;
-  max-width: 42vw;
+  max-width: min(70vw, 280px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .status-chip.online {
-  color: var(--ok);
-  border-color: rgba(62, 207, 142, 0.4);
+  color: var(--text);
 }
 
-.status-chip.live {
-  color: #fff;
-  background: rgba(43, 176, 166, 0.28);
-  border-color: rgba(43, 176, 166, 0.55);
+.status-chip.live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.18);
+  flex: none;
+}
+
+.status-chip.live-turn::before {
+  background: #f0c14a;
+  box-shadow: 0 0 0 3px rgba(240, 193, 74, 0.18);
 }
 
 .lang-switch {
@@ -890,7 +901,10 @@ body {
   }
 
   .status-chip {
-    display: none;
+    max-width: 38vw;
+    font-size: 0.68rem;
+    padding: 5px 8px;
+    gap: 6px;
   }
 
   .local-pip {

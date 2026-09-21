@@ -30,6 +30,7 @@ import {
 import { bindLangSwitch } from "./ui/lang-switch.js";
 import { createStatus } from "./ui/status.js";
 import { fetchIceServers } from "./webrtc/ice.js";
+import { liveStatusKey, liveStatusMode } from "./webrtc/ice-path.js";
 import { createPeerController } from "./webrtc/peer.js";
 import { applyOutgoingVideoQuality } from "./webrtc/quality.js";
 
@@ -78,6 +79,7 @@ export function createOperator({
     },
   });
   let iceServers = [];
+  let meteredAllowed = false;
   let connected = false;
   let connecting = false;
   let robotCapabilities = null;
@@ -101,7 +103,14 @@ export function createOperator({
 
   const peer = createPeerController({
     els,
-    getIceServers: () => iceServers,
+    getIceServers: () => (meteredAllowed ? iceServers : []),
+    getFallbackIceServers: () => iceServers,
+    onUseMetered() {
+      meteredAllowed = true;
+    },
+    onIcePath(kind) {
+      status.setStatus(liveStatusKey(kind), liveStatusMode(kind));
+    },
     getSocket: () => signaling.getSocket(),
     getLocalStream: () => media.getLocalStream(),
     ensureMedia: () => media.ensureMedia(),
@@ -276,6 +285,7 @@ export function createOperator({
       if (allowed === false) return;
     }
     connecting = true;
+    meteredAllowed = false;
     status.showEnded(false);
     status.setPlaceholder("status.connecting");
     status.setStatus("status.connecting", "online");
@@ -339,6 +349,7 @@ export function createOperator({
     });
 
     socket.on(EVENT_PEER_LEFT, () => {
+      meteredAllowed = false;
       peer.cleanupPeer();
       status.setPlaceholder("status.waitingRobot");
       status.setStatus("status.robotLeft", "online");

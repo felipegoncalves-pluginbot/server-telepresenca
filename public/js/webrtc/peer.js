@@ -5,6 +5,8 @@ import {
   SIGNAL_OFFER,
 } from "../protocol/events.js";
 import { hasRenderableRemoteVideo } from "./handshake.js";
+import { createHostFallback, offerSignalData } from "./host-fallback.js";
+import { reportGatheredIce, reportSelectedIcePath } from "./ice-path.js";
 import { createIceQueue } from "./ice-queue.js";
 
 const MAX_OFFER_RETRIES = 2;
@@ -15,6 +17,9 @@ const MAX_OFFER_RETRIES = 2;
 export function createPeerController({
   els,
   getIceServers,
+  getFallbackIceServers,
+  onUseMetered,
+  onIcePath,
   getSocket,
   getLocalStream,
   ensureMedia,
@@ -31,6 +36,13 @@ export function createPeerController({
   let audioUnlockBound = false;
   let controlChannel = null;
   const iceQueue = createIceQueue();
+  const hostFallback = createHostFallback({
+    getPc: () => pc,
+    getFallbackServers: () =>
+      typeof getFallbackIceServers === "function" ? getFallbackIceServers() : [],
+    onUseMetered,
+    restart: (opts) => startCallAsOfferer(opts),
+  });
 
   function clearOfferRetryTimer() {
     if (offerRetryTimer) {
@@ -83,6 +95,7 @@ export function createPeerController({
 
   function cleanupPeer({ resetRetry = true } = {}) {
     if (resetRetry) clearOfferRetry();
+    hostFallback.reset();
     iceQueue.reset();
     if (controlChannel) {
       controlChannel.onopen = null;
@@ -97,6 +110,8 @@ export function createPeerController({
     }
     if (pc) {
       pc.onicecandidate = null;
+      pc.onicegatheringstatechange = null;
+      pc.oniceconnectionstatechange = null;
       pc.ontrack = null;
       pc.onconnectionstatechange = null;
       pc.onsignalingstatechange = null;
@@ -106,6 +121,28 @@ export function createPeerController({
     els.remoteVideo.srcObject = null;
     els.remotePlaceholder.classList.remove("hidden");
     setRtcState("idle");
+  }
+
+  function watchIce(connection) {
+    connection.onicegatheringstatechange = () => {
+      if (connection.iceGatheringState === "complete") {
+        reportGatheredIce(connection).catch((err) =>
+          console.warn("Falha ao ler candidatos ICE", err),
+        );
+      }
+    };
+    connection.oniceconnectionstatechange = () => {
+      const state = connection.iceConnectionState;
+      if (state === "connected" || state === "completed") {
+        hostFallback.markConnected();
+        return;
+      }
+      if (state === "failed") {
+        hostFallback
+          .escalate("failed")
+          .catch((err) => console.warn("Falha ao escalar ICE", err));
+      }
+    };
   }
 
   async function createPeerConnection({ resetRetry = true } = {}) {
@@ -152,6 +189,8 @@ export function createPeerController({
       }
     };
 
+    watchIce(pc);
+
     pc.ontrack = (event) => {
       if (event.track?.kind !== "video") {
         if (
@@ -177,6 +216,11 @@ export function createPeerController({
         setStatus("status.webrtcUnstable", "online");
       }
       if (pc.connectionState === "connected") {
+        reportSelectedIcePath(pc)
+          .then((kind) => {
+            if (kind && typeof onIcePath === "function") onIcePath(kind);
+          })
+          .catch((err) => console.warn("Falha ao ler caminho ICE", err));
         setStatus("status.live", "live");
         if (hasRenderableRemoteVideo(els.remoteVideo)) {
           clearOfferRetry();
@@ -188,7 +232,7 @@ export function createPeerController({
     return pc;
   }
 
-  async function startCallAsOfferer({ iceRestart = false } = {}) {
+  async function startCallAsOfferer({ iceRestart = false, escalate = false } = {}) {
     const socket = getSocket();
     if (!socket) return;
     if (!pc) await createPeerConnection();
@@ -198,8 +242,9 @@ export function createPeerController({
       await pc.setLocalDescription(offer);
       socket.emit(EVENT_SIGNAL, {
         type: SIGNAL_OFFER,
-        data: pc.localDescription,
+        data: offerSignalData(pc.localDescription, escalate),
       });
+      if (!escalate) hostFallback.arm();
     } finally {
       makingOffer = false;
     }
@@ -223,8 +268,8 @@ export function createPeerController({
       offerRetryCount += 1;
       console.warn("Sem vídeo do robô; renegociando.", offerRetryCount, state);
       try {
-        if (state === "failed" || state === "disconnected") {
-          await startCallAsOfferer({ iceRestart: true });
+        if (state === "failed") {
+          await hostFallback.escalate(state);
         }
       } catch (err) {
         console.warn("Offer retry failed", err);

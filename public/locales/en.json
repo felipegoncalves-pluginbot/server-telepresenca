@@ -6,6 +6,8 @@
   "status.connected": "Connected to server",
   "status.waitingRobot": "Waiting for the robot…",
   "status.live": "In telepresence",
+  "status.liveUdp": "In telepresence · UDP",
+  "status.liveTurn": "In telepresence · TURN",
   "status.webrtcUnstable": "Unstable connection",
   "status.robotLeft": "Robot disconnected",
   "status.endedByRobot": "Call ended by the robot",
