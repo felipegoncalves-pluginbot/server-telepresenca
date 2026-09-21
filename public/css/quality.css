@@ -1,0 +1,133 @@
+.quality-btn {
+  position: relative;
+}
+
+.quality-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(43, 176, 166, 0.92);
+  color: #041414;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.quality-panel {
+  width: min(300px, calc(100vw - 28px));
+}
+
+.quality-title {
+  min-width: 0;
+}
+
+.quality-sep {
+  margin: 0 0.28em;
+  opacity: 0.55;
+}
+
+.quality-title #qualityValueLabel {
+  font-weight: 700;
+  color: #fff;
+}
+
+.quality-slider {
+  position: relative;
+  height: 28px;
+  margin: 0 4px 6px;
+  touch-action: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.quality-slider:focus-visible {
+  box-shadow: 0 0 0 2px rgba(43, 176, 166, 0.65);
+  border-radius: 999px;
+}
+
+.quality-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+
+.quality-track-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.72);
+  transition: width 0.12s ease;
+}
+
+.quality-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  transition: left 0.12s ease;
+}
+
+.quality-ticks {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 2px 0 10px;
+}
+
+.quality-tick {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.62);
+  padding: 2px 0 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.quality-tick-mark {
+  display: block;
+  width: 5px;
+  height: 5px;
+  margin: 0 auto 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.quality-tick.is-active .quality-tick-mark {
+  background: #fff;
+}
+
+.quality-tick.is-active {
+  color: #fff;
+  font-weight: 600;
+}
+
+.quality-tick-label {
+  display: block;
+  font-size: 0.58rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

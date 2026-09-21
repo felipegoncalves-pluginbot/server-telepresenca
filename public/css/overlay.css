@@ -1,0 +1,89 @@
+.ended-overlay {
+  --invite-primary: transparent;
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  background: color-mix(in srgb, var(--invite-primary) 22%, rgba(5, 8, 12, 0.72));
+  backdrop-filter: blur(10px);
+}
+
+.ended-overlay p {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.rejoin {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 22px;
+  background: linear-gradient(180deg, var(--accent), #1f7f78);
+  color: #041414;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.rejoin:hover {
+  filter: brightness(1.05);
+}
+
+.invite-logo {
+  max-height: 72px;
+  max-width: min(280px, 70vw);
+  object-fit: contain;
+}
+
+.invite-logo.hidden {
+  display: none;
+}
+
+.invite-window {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.invite-window.hidden {
+  display: none;
+}
+
+.identify-form {
+  display: grid;
+  gap: 12px;
+  width: min(360px, calc(100vw - 48px));
+  justify-items: stretch;
+}
+
+.identify-form.hidden {
+  display: none;
+}
+
+.identify-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.identify-input {
+  appearance: none;
+  border: 1px solid var(--hud-border);
+  border-radius: 12px;
+  background: rgba(12, 16, 22, 0.85);
+  color: var(--text);
+  font-size: 1rem;
+  padding: 12px 14px;
+}
+
+.identify-error {
+  margin: 0;
+  color: #ff8a80;
+  font-size: 0.9rem;
+  text-align: center;
+}

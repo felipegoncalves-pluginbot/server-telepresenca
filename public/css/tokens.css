@@ -1,0 +1,113 @@
+:root {
+  --bg: #070b10;
+  --text: #f3f7fb;
+  --muted: rgba(232, 238, 244, 0.72);
+  --accent: #2bb0a6;
+  --danger: #e53935;
+  --danger-dim: #c62828;
+  --ok: #3ecf8e;
+  --hud: rgba(12, 16, 22, 0.38);
+  --hud-border: rgba(255, 255, 255, 0.14);
+  --hud-chip-height: 32px;
+  --shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+  font-family: "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+.app,
+.stage {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+body {
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.stage {
+  position: relative;
+  background: #000;
+}
+
+#remoteVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  transition: transform 0.18s ease-out;
+}
+
+#remoteVideo.is-look-preview {
+  transition: none;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    transparent 18%,
+    transparent 70%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  z-index: 1;
+}
+
+.remote-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  background: radial-gradient(
+    80% 60% at 50% 45%,
+    rgba(12, 22, 28, 0.35),
+    rgba(7, 11, 16, 0.72)
+  );
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.remote-overlay.hidden {
+  display: none;
+}
+
+.remote-overlay p {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.waiting-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(43, 176, 166, 0.25);
+  border-top-color: var(--accent);
+  animation: spin 1.1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

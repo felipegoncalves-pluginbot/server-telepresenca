@@ -7,6 +7,7 @@ import {
   LOCOMOTION_HEARTBEAT_INTERVAL_MS,
   createLocomotionFeature,
 } from "../../public/js/features/locomotion.js";
+import { resolveImports } from "../../scripts/lint-css.mjs";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -120,7 +121,7 @@ test("locomotion pulse backward stops forward heartbeat when robot lacks continu
 });
 
 test("move-hud is positioned on the right for mobile/coarse touch screens", () => {
-  const styleCss = fs.readFileSync(path.join(root, "public", "style.css"), "utf8");
+  const styleCss = resolveImports(path.join(root, "public", "style.css")).css;
   const mobileMediaMatch = styleCss.match(
     /@media\s*\(\s*max-width:\s*720px\s*\)\s*,\s*\(\s*pointer:\s*coarse\s*\)\s*\{([\s\S]*?)\n\}/,
   );
@@ -140,7 +141,7 @@ test("move-hud is positioned on the right for mobile/coarse touch screens", () =
 });
 
 test("move-hud is positioned on the left for desktop default layout", () => {
-  const styleCss = fs.readFileSync(path.join(root, "public", "style.css"), "utf8");
+  const styleCss = resolveImports(path.join(root, "public", "style.css")).css;
   const desktopMoveHudMatch = styleCss.match(/\.move-hud\s*\{([^}]+)\}/);
   assert.ok(desktopMoveHudMatch, ".move-hud desktop padrão deve existir");
 

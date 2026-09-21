@@ -1,0 +1,86 @@
+@media (max-width: 720px), (pointer: coarse) {
+  .brand-logo {
+    height: 22px;
+    opacity: 0.8;
+  }
+
+  .status-chip {
+    max-width: 38vw;
+    font-size: 0.68rem;
+    padding: 0 8px;
+    gap: 6px;
+  }
+
+  .local-pip {
+    top: max(56px, calc(env(safe-area-inset-top) + 48px));
+    right: max(12px, env(safe-area-inset-right));
+    bottom: auto;
+    width: 108px;
+  }
+
+  .move-hud {
+    left: auto;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .joystick-wrap {
+    display: flex;
+  }
+
+  .kbd-hint {
+    display: none;
+  }
+
+  .joystick {
+    width: 156px;
+    height: 156px;
+    opacity: 0.58;
+  }
+
+  .joystick.is-disabled {
+    opacity: 0.32;
+  }
+
+  .joystick-hint {
+    display: none;
+  }
+
+  .call-bar {
+    gap: 8px;
+    padding: 8px 9px;
+  }
+
+  .ctrl {
+    width: 46px;
+    height: 46px;
+  }
+
+  .quality-panel {
+    width: min(280px, calc(100vw - 24px));
+    bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+
+  .quality-tick-label {
+    font-size: 0.54rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiting-mark {
+    animation: none;
+  }
+
+  .joystick {
+    transition: none;
+  }
+
+  #remoteVideo {
+    transition: none;
+  }
+
+  .quality-thumb,
+  .quality-track-fill {
+    transition: none;
+  }
+}
