@@ -159,6 +159,16 @@ export function createPeerController({
         ordered: false,
         maxRetransmits: 0,
       });
+      controlChannel.bufferedAmountLowThreshold = 65536;
+      controlChannel.onopen = () => {
+        console.log("[DataChannel] Canal 'control' conectado (P2P pronto)");
+      };
+      controlChannel.onclose = () => {
+        console.log("[DataChannel] Canal 'control' desconectado");
+      };
+      controlChannel.onerror = (err) => {
+        console.warn("[DataChannel] Erro no canal 'control':", err);
+      };
     } catch (err) {
       console.warn("Falha ao criar DataChannel:", err);
     }
@@ -336,6 +346,10 @@ export function createPeerController({
     playRemoteWithSound,
     sendDataChannelControl(action, value) {
       if (controlChannel && controlChannel.readyState === "open") {
+        if (controlChannel.bufferedAmount > 65536) {
+          console.warn("[DataChannel] Buffer cheio, descartando comando:", action);
+          return false;
+        }
         try {
           controlChannel.send(JSON.stringify({ action, value }));
           return true;

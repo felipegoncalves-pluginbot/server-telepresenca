@@ -31,3 +31,17 @@ test("missing TURN credentials keep username empty", () => {
   assert.equal(config.turnCredential, "");
   assert.equal(config.port, 4040);
 });
+
+test("loadConfig defaults to Google and Metered STUN when STUN_URLS is omitted", () => {
+  const config = loadConfig({});
+  assert.deepEqual(config.stunUrls, [
+    "stun:stun.l.google.com:19302",
+    "stun:stun1.l.google.com:19302",
+    "stun:stun.relay.metered.ca:80",
+  ]);
+});
+
+test("loadConfig respects explicit empty string for STUN_URLS", () => {
+  const config = loadConfig({ STUN_URLS: "" });
+  assert.deepEqual(config.stunUrls, []);
+});

@@ -49,8 +49,7 @@ body {
   object-fit: fill;
   background: #000;
   transform: translateZ(0);
-  transition: transform 0.18s ease-out, left 0.18s ease-out, top 0.18s ease-out,
-    width 0.18s ease-out, height 0.18s ease-out;
+  transition: transform 0.18s ease-out;
 }
 
 #remoteVideo.is-look-preview {

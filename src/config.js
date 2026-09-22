@@ -39,6 +39,12 @@ export function loadEnvFile(env = process.env) {
  * @property {string} robotsApiUrl
  */
 
+export const DEFAULT_STUN_URLS = Object.freeze([
+  "stun:stun.l.google.com:19302",
+  "stun:stun1.l.google.com:19302",
+  "stun:stun.relay.metered.ca:80",
+]);
+
 /**
  * @param {NodeJS.ProcessEnv} [env]
  * @returns {AppConfig}
@@ -52,10 +58,13 @@ export function loadConfig(env = process.env) {
     corsOrigin = origins.length <= 1 ? origins[0] || "*" : origins;
   }
 
+  const stunUrls =
+    env.STUN_URLS === undefined ? [...DEFAULT_STUN_URLS] : splitCsv(env.STUN_URLS);
+
   return {
     port: Number.parseInt(env.PORT || "4040", 10) || 4040,
     corsOrigin,
-    stunUrls: splitCsv(env.STUN_URLS),
+    stunUrls,
     turnUrls: splitCsv(env.TURN_URLS),
     turnUsername: env.TURN_USERNAME || "",
     turnCredential: env.TURN_CREDENTIAL || "",
