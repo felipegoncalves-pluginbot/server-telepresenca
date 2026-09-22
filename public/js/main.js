@@ -1,5 +1,6 @@
 import { i18n } from "./i18n/index.js";
 import { createInviteRejoin, runInviteGate, showInviteMessage } from "./invite/gate.js";
+import { bindRemoteVideoLayout } from "./media/remote-layout.js";
 import { createOperator } from "./operator.js";
 import { queryDom } from "./ui/dom.js";
 
@@ -10,6 +11,7 @@ async function boot() {
   await i18n.init();
   i18n.apply();
   const els = queryDom();
+  bindRemoteVideoLayout(els.remoteVideo, document.querySelector(".stage"));
   const session = await runInviteGate({ els, i18n });
   if (session === false) return;
 
