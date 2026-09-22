@@ -17,6 +17,8 @@ export function queryDom() {
     localVideo: document.getElementById("localVideo"),
     localPip: document.getElementById("localPip"),
     remoteVideo: document.getElementById("remoteVideo"),
+    remoteVideoHost: document.getElementById("remoteVideoHost"),
+    remoteVideoCanvas: document.getElementById("remoteVideoCanvas"),
     remotePlaceholder: document.getElementById("remotePlaceholder"),
     placeholderText: document.querySelector("#remotePlaceholder p"),
     statusChip: document.getElementById("statusChip"),

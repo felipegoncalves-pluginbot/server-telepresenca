@@ -11,7 +11,10 @@ async function boot() {
   await i18n.init();
   i18n.apply();
   const els = queryDom();
-  bindRemoteVideoLayout(els.remoteVideo, document.querySelector(".stage"));
+  bindRemoteVideoLayout(els.remoteVideo, document.querySelector(".stage"), {
+    hostEl: els.remoteVideoHost,
+    canvasEl: els.remoteVideoCanvas,
+  });
   const session = await runInviteGate({ els, i18n });
   if (session === false) return;
 

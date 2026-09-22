@@ -36,15 +36,15 @@ export function createHeadFeature(els, t) {
   }
 
   function applyPreview(preview) {
-    const video = els.remoteVideo;
-    if (!video) return;
+    const host = els.remoteVideoHost || els.remoteVideo;
+    if (!host) return;
     if (!preview || reducedMotion) {
-      video.classList.remove("is-look-preview");
-      video.style.transform = "";
+      host.classList.remove("is-look-preview");
+      host.style.transform = "";
       return;
     }
-    video.classList.add("is-look-preview");
-    video.style.transform = `translate(${preview.x}px, ${preview.y}px)`;
+    host.classList.add("is-look-preview");
+    host.style.transform = `translate(${preview.x}px, ${preview.y}px)`;
   }
 
   function markUsed() {

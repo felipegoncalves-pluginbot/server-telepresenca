@@ -42,18 +42,29 @@ body {
   background: #000;
 }
 
-#remoteVideo {
+.remote-video-host {
   position: absolute;
-  width: auto;
-  height: auto;
-  object-fit: fill;
+  overflow: hidden;
   background: #000;
-  transform: translateZ(0);
   transition: transform 0.18s ease-out;
 }
 
-#remoteVideo.is-look-preview {
+.remote-video-host.is-look-preview {
   transition: none;
+}
+
+.remote-video-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.remote-video-source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .vignette {

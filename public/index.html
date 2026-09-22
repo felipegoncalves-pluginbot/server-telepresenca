@@ -15,7 +15,20 @@
   <body>
     <div class="app">
       <div class="stage">
-        <video id="remoteVideo" autoplay playsinline muted></video>
+        <div class="remote-video-host" id="remoteVideoHost">
+          <canvas
+            id="remoteVideoCanvas"
+            class="remote-video-canvas"
+            aria-hidden="true"
+          ></canvas>
+          <video
+            id="remoteVideo"
+            class="remote-video-source"
+            autoplay
+            playsinline
+            muted
+          ></video>
+        </div>
 
         <div class="vignette" aria-hidden="true"></div>
 
