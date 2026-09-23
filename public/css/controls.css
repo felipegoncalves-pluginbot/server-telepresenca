@@ -214,3 +214,50 @@
 .ctrl.hangup:hover:not(:disabled) {
   background: #ef5350;
 }
+
+.hud-tooltip {
+  position: fixed;
+  z-index: 1000;
+  transform: translate(-50%, -100%) translateY(4px);
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #141a23;
+  color: var(--text);
+  border: 1px solid var(--hud-border);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.12s ease-out,
+    visibility 0.12s;
+}
+
+.hud-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px 5px 0 5px;
+  border-style: solid;
+  border-color: #141a23 transparent transparent transparent;
+}
+
+.hud-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -100%) translateY(0);
+}
+
+@media (hover: none) {
+  .hud-tooltip {
+    display: none !important;
+  }
+}

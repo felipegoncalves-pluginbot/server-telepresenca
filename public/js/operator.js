@@ -29,6 +29,7 @@ import {
 } from "./invite/reconnect.js";
 import { bindLangSwitch } from "./ui/lang-switch.js";
 import { createStatus } from "./ui/status.js";
+import { initTooltips } from "./ui/tooltip.js";
 import { fetchIceServers } from "./webrtc/ice.js";
 import { liveStatusKey, liveStatusMode } from "./webrtc/ice-path.js";
 import { createPeerController } from "./webrtc/peer.js";
@@ -438,7 +439,12 @@ export function createOperator({
       media.toggleCam(connected).catch((err) => console.error(err));
     });
 
-    document.addEventListener("localechange", refreshDynamicText);
+    const tooltips = initTooltips(els.callBar || document, ".ctrl");
+
+    document.addEventListener("localechange", () => {
+      refreshDynamicText();
+      tooltips.update();
+    });
     refreshDynamicText();
     countdown.start();
   }

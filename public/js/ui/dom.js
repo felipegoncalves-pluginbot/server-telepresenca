@@ -45,6 +45,8 @@ export function queryDom() {
     headLookLayer: document.getElementById("headLookLayer"),
     powerHost: document.getElementById("powerHost"),
     volumeHost: document.getElementById("volumeHost"),
+    callBar: document.getElementById("callBar"),
+    hudTooltip: document.getElementById("hudTooltip"),
   };
 }
 

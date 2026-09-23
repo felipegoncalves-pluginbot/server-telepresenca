@@ -113,7 +113,6 @@ function updateButtonState() {
         : "Tocar chamada no robô";
 
   currentButton.setAttribute("aria-label", label);
-  currentButton.setAttribute("title", label);
   currentButton.setAttribute("aria-pressed", isRingingState ? "true" : "false");
 
   if (isRingingState) {
