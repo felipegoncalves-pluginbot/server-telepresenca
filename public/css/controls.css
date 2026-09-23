@@ -116,20 +116,37 @@
   flex: none;
   overflow: visible;
   line-height: 0;
+  transition:
+    transform 0.16s var(--ease-snappy),
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .ctrl svg {
   width: 22px;
   height: 22px;
+  transform-origin: center center;
+  transition: transform 0.16s ease-out;
+}
+
+.ctrl:hover:not(:disabled):not(.is-ringing) svg {
+  animation: discord-icon-rotate 0.42s ease-in-out;
 }
 
 .ctrl:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.06);
+}
+
+.ctrl:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
 .ctrl:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
 .ctrl .slash {
@@ -198,6 +215,24 @@
   }
 }
 
+@keyframes discord-icon-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  65% {
+    transform: rotate(10deg);
+  }
+  85% {
+    transform: rotate(-3deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
 .ctrl.hangup {
   margin-left: 10px;
   background: linear-gradient(180deg, var(--danger), var(--danger-dim));
@@ -213,18 +248,23 @@
 
 .ctrl.hangup:hover:not(:disabled) {
   background: #ef5350;
+  transform: scale(1.06);
+}
+
+.ctrl.hangup:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
 .hud-tooltip {
   position: fixed;
   z-index: 1000;
-  transform: translate(-50%, -100%) translateY(4px);
+  transform: translate(-50%, -100%) translateY(4px) scale(0.92);
   padding: 6px 10px;
-  border-radius: 6px;
-  background: #141a23;
+  border-radius: 8px;
+  background: #111419;
   color: var(--text);
   border: 1px solid var(--hud-border);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.015em;
@@ -233,10 +273,11 @@
   user-select: none;
   opacity: 0;
   visibility: hidden;
+  will-change: transform, opacity;
   transition:
-    opacity 0.12s ease-out,
-    transform 0.12s ease-out,
-    visibility 0.12s;
+    opacity 0.14s var(--ease-snappy),
+    transform 0.14s var(--ease-spring),
+    visibility 0.14s;
 }
 
 .hud-tooltip::after {
@@ -247,13 +288,32 @@
   transform: translateX(-50%);
   border-width: 5px 5px 0 5px;
   border-style: solid;
-  border-color: #141a23 transparent transparent transparent;
+  border-color: #111419 transparent transparent transparent;
 }
 
 .hud-tooltip.is-visible {
   opacity: 1;
   visibility: visible;
-  transform: translate(-50%, -100%) translateY(0);
+  transform: translate(-50%, -100%) translateY(-2px) scale(1);
+}
+
+.hud-tooltip.is-sliding {
+  transition:
+    opacity 0.14s var(--ease-snappy),
+    transform 0.14s var(--ease-spring),
+    left 0.18s var(--ease-spring),
+    top 0.18s var(--ease-spring),
+    visibility 0.14s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctrl,
+  .ctrl svg,
+  .hud-tooltip {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
 }
 
 @media (hover: none) {

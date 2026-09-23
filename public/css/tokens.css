@@ -10,6 +10,8 @@
   --hud-border: rgba(255, 255, 255, 0.14);
   --hud-chip-height: 32px;
   --shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
   font-family: "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
   color-scheme: dark;
 }

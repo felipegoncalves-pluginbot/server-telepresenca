@@ -151,13 +151,22 @@ export function initTooltips(root, selector = ".ctrl", options = {}) {
   /** @type {HTMLElement | null} */
   let currentTarget = null;
 
-  function show(/** @type {HTMLElement} */ target) {
+  /**
+   * @param {HTMLElement} target
+   * @param {boolean} [isWarm=false]
+   */
+  function show(target, isWarm = false) {
     if (!tooltipEl) return;
     const label = resolveLabel(target, options.getLabel);
     if (!label) return hide();
     tooltipEl.textContent = label;
     currentTarget = target;
     positionTooltip(tooltipEl, target);
+    if (isWarm) {
+      tooltipEl.classList.add("is-sliding");
+    } else {
+      tooltipEl.classList.remove("is-sliding");
+    }
     tooltipEl.setAttribute("aria-hidden", "false");
     tooltipEl.classList.add("is-visible");
   }
@@ -171,6 +180,7 @@ export function initTooltips(root, selector = ".ctrl", options = {}) {
       }
       tooltipEl.setAttribute("aria-hidden", "true");
       tooltipEl.classList.remove("is-visible");
+      tooltipEl.classList.remove("is-sliding");
     }
     currentTarget = null;
   }
@@ -179,10 +189,10 @@ export function initTooltips(root, selector = ".ctrl", options = {}) {
     if (btn.disabled || btn.hasAttribute("disabled")) return hide();
     if (enterTimer) clearTimeout(enterTimer);
     if (Date.now() - lastCloseTimestamp < warmWindowMs) {
-      show(btn);
+      show(btn, true);
     } else {
       enterTimer = setTimeout(() => {
-        show(btn);
+        show(btn, false);
         enterTimer = null;
       }, enterDelayMs);
     }

@@ -315,3 +315,71 @@ test("initTooltips supports keyboard focusin and focusout", async () => {
 
   controller.destroy();
 });
+
+test("initTooltips manages is-sliding class for smooth warm transitions between adjacent targets", async () => {
+  const { doc, body } = setupMockDom();
+  const btn1 = doc.createElement("button");
+  btn1.classList.add("ctrl");
+  btn1.setAttribute("aria-label", "Microfone");
+  btn1.getBoundingClientRect = () => ({
+    top: 100,
+    bottom: 148,
+    left: 200,
+    right: 248,
+    width: 48,
+    height: 48,
+  });
+  body.appendChild(btn1);
+
+  const btn2 = doc.createElement("button");
+  btn2.classList.add("ctrl");
+  btn2.setAttribute("aria-label", "Câmera");
+  btn2.getBoundingClientRect = () => ({
+    top: 100,
+    bottom: 148,
+    left: 260,
+    right: 308,
+    width: 48,
+    height: 48,
+  });
+  body.appendChild(btn2);
+
+  const controller = initTooltips(body, ".ctrl", {
+    enterDelayMs: 20,
+    warmWindowMs: 150,
+    doc,
+  });
+
+  const tooltipEl = body.children.find((c) => c.getAttribute("role") === "tooltip");
+
+  // 1. Initial cold hover: is-sliding must be FALSE
+  btn1.dispatchEvent({ type: "mouseenter" });
+  await new Promise((r) => setTimeout(r, 35));
+  assert.equal(tooltipEl.getAttribute("aria-hidden"), "false");
+  assert.equal(tooltipEl.classList.contains("is-visible"), true);
+  assert.equal(tooltipEl.classList.contains("is-sliding"), false);
+  assert.equal(tooltipEl.style.left, "224px"); // 200 + 48/2
+
+  // 2. Transition to adjacent button in warm window: is-sliding must be TRUE
+  btn1.dispatchEvent({ type: "mouseleave" });
+  btn2.dispatchEvent({ type: "mouseenter" });
+  assert.equal(tooltipEl.getAttribute("aria-hidden"), "false");
+  assert.equal(tooltipEl.classList.contains("is-sliding"), true);
+  assert.equal(tooltipEl.style.left, "284px"); // 260 + 48/2
+
+  // 3. Leaving button: is-sliding and is-visible must be cleared
+  btn2.dispatchEvent({ type: "mouseleave" });
+  assert.equal(tooltipEl.getAttribute("aria-hidden"), "true");
+  assert.equal(tooltipEl.classList.contains("is-visible"), false);
+  assert.equal(tooltipEl.classList.contains("is-sliding"), false);
+
+  // 4. Waiting past warm window, cold hover again: is-sliding must be FALSE
+  await new Promise((r) => setTimeout(r, 180));
+  btn2.dispatchEvent({ type: "mouseenter" });
+  await new Promise((r) => setTimeout(r, 35));
+  assert.equal(tooltipEl.getAttribute("aria-hidden"), "false");
+  assert.equal(tooltipEl.classList.contains("is-visible"), true);
+  assert.equal(tooltipEl.classList.contains("is-sliding"), false);
+
+  controller.destroy();
+});
