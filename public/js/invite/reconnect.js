@@ -78,6 +78,7 @@ export function paintCallEnded(state, status, els, t) {
     text.dataset.i18n = state.messageKey;
     text.textContent = t(state.messageKey);
   }
-  const key = state.messageKey === "call.ended" ? "status.disconnected" : state.messageKey;
+  const key =
+    state.messageKey === "call.ended" ? "status.disconnected" : state.messageKey;
   status.setStatus(key, "");
 }

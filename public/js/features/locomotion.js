@@ -173,7 +173,6 @@ export function createLocomotionFeature(els, t) {
     }
   }
 
-
   return {
     id: "locomotion",
     optIn: false,

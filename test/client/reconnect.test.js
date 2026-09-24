@@ -28,13 +28,17 @@ test("invite rejoin is allowed only while the window is open", () => {
 test("ended overlay hides rejoin after expiry and during reconnect grace", () => {
   const end = "2026-09-19T13:15:00.000Z";
   const now = Date.parse(end) - 1_000;
-  assert.deepEqual(endedOverlayState({ expired: true, inviteBound: true, expiresAt: end, now }), {
-    show: true,
-    rejoin: false,
-    messageKey: "invite.sessionExpired",
-  });
+  assert.deepEqual(
+    endedOverlayState({ expired: true, inviteBound: true, expiresAt: end, now }),
+    {
+      show: true,
+      rejoin: false,
+      messageKey: "invite.sessionExpired",
+    },
+  );
   assert.equal(
-    endedOverlayState({ replaced: true, inviteBound: true, expiresAt: end, now }).messageKey,
+    endedOverlayState({ replaced: true, inviteBound: true, expiresAt: end, now })
+      .messageKey,
     "invite.replaced",
   );
   assert.deepEqual(endedOverlayState({ transient: true }), {
@@ -43,7 +47,8 @@ test("ended overlay hides rejoin after expiry and during reconnect grace", () =>
     messageKey: "status.reconnecting",
   });
   assert.equal(
-    endedOverlayState({ inviteBound: true, expiresAt: end, now: Date.parse(end) + 1 }).rejoin,
+    endedOverlayState({ inviteBound: true, expiresAt: end, now: Date.parse(end) + 1 })
+      .rejoin,
     false,
   );
   assert.equal(
@@ -52,15 +57,26 @@ test("ended overlay hides rejoin after expiry and during reconnect grace", () =>
   );
   const overlay = { dataset: {}, textContent: "" };
   const els = {
-    btnRejoin: { classList: { hidden: true, toggle(_name, force) { this.hidden = !force; } } },
+    btnRejoin: {
+      classList: {
+        hidden: true,
+        toggle(_name, force) {
+          this.hidden = !force;
+        },
+      },
+    },
     endedOverlay: { querySelector: () => overlay },
   };
   const calls = [];
   paintCallEnded(
     { show: true, rejoin: false, messageKey: "invite.sessionExpired" },
     {
-      setStatus(key) { calls.push(key); },
-      showEnded(show) { calls.push(show); },
+      setStatus(key) {
+        calls.push(key);
+      },
+      showEnded(show) {
+        calls.push(show);
+      },
     },
     els,
     (key) => key,

@@ -362,8 +362,7 @@ export function createVideoQualityFeature(els, t) {
         els.btnVideoQuality.addEventListener("click", onQualityClick);
       }
 
-      const host =
-        els.btnVideoQuality?.closest(".popover-host") || els.qualityPanel;
+      const host = els.btnVideoQuality?.closest(".popover-host") || els.qualityPanel;
       const unbindDismiss = host
         ? bindPopoverDismiss(host, {
             isOpen: () => Boolean(panel?.isPanelOpen()),

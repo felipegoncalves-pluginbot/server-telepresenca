@@ -35,11 +35,20 @@ test("invite id and API url helpers", () => {
 });
 
 test("overlay keys follow invite HTTP codes", () => {
-  assert.equal(overlayKeyForInvite(425, { code: "invite_not_started" }), "invite.notStarted");
+  assert.equal(
+    overlayKeyForInvite(425, { code: "invite_not_started" }),
+    "invite.notStarted",
+  );
   assert.equal(overlayKeyForInvite(410, { code: "invite_ended" }), "invite.expired");
-  assert.equal(overlayKeyForInvite(409, { code: "invite_superseded" }), "invite.superseded");
+  assert.equal(
+    overlayKeyForInvite(409, { code: "invite_superseded" }),
+    "invite.superseded",
+  );
   assert.equal(overlayKeyForInvite(404, {}), "invite.notFound");
-  assert.equal(overlayKeyForInvite(503, { code: "invite_missing_api" }), "invite.missingApi");
+  assert.equal(
+    overlayKeyForInvite(503, { code: "invite_missing_api" }),
+    "invite.missingApi",
+  );
   assert.equal(overlayKeyForInvite(500, {}), "invite.unavailable");
 });
 
@@ -70,7 +79,10 @@ test("createInviteRejoin skips the first connect and revalidates later", async (
       json: async () => ({ session: { room: "r1", expires_at: "t" } }),
     };
   };
-  const beforeConnect = createInviteRejoin({ roomId: "r1" }, { fetchImpl, search: "?invite=abc" });
+  const beforeConnect = createInviteRejoin(
+    { roomId: "r1" },
+    { fetchImpl, search: "?invite=abc" },
+  );
   assert.equal(await beforeConnect(), true);
   assert.equal(calls.length, 0);
   assert.equal(await beforeConnect(), true);
@@ -86,7 +98,13 @@ test("createInviteRejoin denies reconnect when the invite ended", async () => {
   });
   const beforeConnect = createInviteRejoin(
     { roomId: "r1" },
-    { fetchImpl, search: "?invite=abc", onDenied: (key) => { denied = key; } },
+    {
+      fetchImpl,
+      search: "?invite=abc",
+      onDenied: (key) => {
+        denied = key;
+      },
+    },
   );
   await beforeConnect();
   assert.equal(await beforeConnect(), false);
@@ -110,13 +128,29 @@ test("showInviteMessage toggles overlay classes", () => {
   };
   const els = {
     inviteOverlay: { classList: overlayClasses },
-    identifyForm: { classList: { add(name) { this.added = name; } } },
+    identifyForm: {
+      classList: {
+        add(name) {
+          this.added = name;
+        },
+      },
+    },
     inviteOverlayText: {
-      classList: { remove(name) { this.removed = name; } },
+      classList: {
+        remove(name) {
+          this.removed = name;
+        },
+      },
       dataset: {},
       textContent: "",
     },
-    endedOverlay: { classList: { add(name) { this.added = name; } } },
+    endedOverlay: {
+      classList: {
+        add(name) {
+          this.added = name;
+        },
+      },
+    },
   };
   showInviteMessage(els, (key) => key, "invite.expired");
   assert.equal(overlayClasses.force, false);

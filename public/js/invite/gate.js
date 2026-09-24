@@ -1,8 +1,4 @@
-import {
-  applyInviteBranding,
-  invitePhase,
-  paintInviteWindow,
-} from "./landing.js";
+import { applyInviteBranding, invitePhase, paintInviteWindow } from "./landing.js";
 import {
   createInviteRejoin,
   fetchInvite,

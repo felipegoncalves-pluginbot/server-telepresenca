@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import http from "node:http";
 import path from "node:path";
 import { createApp } from "../../src/http/create-app.js";
-import { proxyInvite, robotsInvitePath, robotsInviteUrl } from "../../src/http/invite-proxy.js";
+import {
+  proxyInvite,
+  robotsInvitePath,
+  robotsInviteUrl,
+} from "../../src/http/invite-proxy.js";
 import { ROOT } from "../helpers/load-schema.js";
 import { test } from "../helpers/test.js";
 

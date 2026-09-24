@@ -137,7 +137,9 @@ export function attachSignaling(io, { rooms, iceServers, log }) {
 
         const room = rooms.ensure(roomId);
         const incomingExpiry = parseExpiresAt(
-          payload && payload.expiresAt != null ? payload.expiresAt : payload?.expires_at,
+          payload && payload.expiresAt != null
+            ? payload.expiresAt
+            : payload?.expires_at,
         );
         if (isExpired(incomingExpiry) || isExpired(room.expiresAt)) {
           throw new Error("session expired");

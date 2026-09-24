@@ -104,10 +104,7 @@ export function bindRemoteVideoLayout(videoEl, stageEl, options = {}) {
   };
 
   const stopVideoFrameLoop = () => {
-    if (
-      videoFrameHandle &&
-      typeof videoEl.cancelVideoFrameCallback === "function"
-    ) {
+    if (videoFrameHandle && typeof videoEl.cancelVideoFrameCallback === "function") {
       videoEl.cancelVideoFrameCallback(videoFrameHandle);
       videoFrameHandle = 0;
     }

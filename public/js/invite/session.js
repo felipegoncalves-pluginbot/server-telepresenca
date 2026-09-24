@@ -32,7 +32,11 @@ function defaultStorage() {
  * @param {string} identification
  * @param {Storage | null} [storage]
  */
-export function rememberIdentification(inviteId, identification, storage = defaultStorage()) {
+export function rememberIdentification(
+  inviteId,
+  identification,
+  storage = defaultStorage(),
+) {
   if (!inviteId || !identification || !storage) return;
   try {
     storage.setItem(identificationStorageKey(inviteId), identification);
