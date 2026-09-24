@@ -42,7 +42,6 @@ export function createMediaController({
       "aria-label",
       t(camOn ? "media.camOn" : "media.camOff"),
     );
-    els.localPip.classList.toggle("hidden", !camOn);
   }
 
   async function attachLocalMediaToPeer() {
@@ -104,7 +103,6 @@ export function createMediaController({
             return null;
           }
           localStream = stream;
-          els.localVideo.srcObject = stream;
           refreshMediaButtons(true);
           return attachLocalMediaToPeer().then(() => stream);
         })
@@ -124,7 +122,6 @@ export function createMediaController({
         track.stop();
       });
       localStream = null;
-      els.localVideo.srcObject = null;
     }
     mediaGeneration += 1;
     mediaRequest = null;

@@ -11,13 +11,6 @@
     gap: 6px;
   }
 
-  .local-pip {
-    top: max(56px, calc(env(safe-area-inset-top) + 48px));
-    right: max(12px, env(safe-area-inset-right));
-    bottom: auto;
-    width: 108px;
-  }
-
   .move-hud {
     left: auto;
     right: max(12px, env(safe-area-inset-right));

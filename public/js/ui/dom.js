@@ -14,8 +14,6 @@ export function queryDom() {
     qualityValueLabel: document.getElementById("qualityValueLabel"),
     qualityBadge: document.getElementById("qualityBadge"),
     btnSendCommand: document.getElementById("btnSendCommand"),
-    localVideo: document.getElementById("localVideo"),
-    localPip: document.getElementById("localPip"),
     remoteVideo: document.getElementById("remoteVideo"),
     remoteVideoHost: document.getElementById("remoteVideoHost"),
     remoteVideoCanvas: document.getElementById("remoteVideoCanvas"),
