@@ -4,6 +4,7 @@ export function queryDom() {
     btnRejoin: document.getElementById("btnRejoin"),
     btnToggleMic: document.getElementById("btnToggleMic"),
     btnToggleCam: document.getElementById("btnToggleCam"),
+    btnToggleScreenShare: document.getElementById("btnToggleScreenShare"),
     btnVideoQuality: document.getElementById("btnVideoQuality"),
     btnCloseQuality: document.getElementById("btnCloseQuality"),
     qualityPanel: document.getElementById("qualityPanel"),

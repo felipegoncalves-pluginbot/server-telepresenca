@@ -1,4 +1,5 @@
 import { waitWithTimeout } from "../webrtc/handshake.js";
+import { createScreenShareController } from "./screen-share.js";
 
 /**
  * @param {object} options
@@ -27,6 +28,18 @@ export function createMediaController({
     return localStream ? localStream.getVideoTracks()[0] : null;
   }
 
+  const screenShare = createScreenShareController({
+    getPc,
+    getCamTrack: camTrack,
+    onStateChange() {
+      refreshMediaButtons(true);
+    },
+    onError(err) {
+      console.warn("Screen share error:", err);
+      refreshMediaButtons(true);
+    },
+  });
+
   function refreshMediaButtons(connected) {
     const mic = micTrack();
     const cam = camTrack();
@@ -42,6 +55,28 @@ export function createMediaController({
       "aria-label",
       t(camOn ? "media.camOn" : "media.camOff"),
     );
+
+    if (els.btnToggleScreenShare) {
+      const supported = screenShare.isSupported();
+      const sharing = screenShare.isSharing();
+      els.btnToggleScreenShare.disabled = !connected || !supported;
+      els.btnToggleScreenShare.classList.toggle("is-sharing", sharing);
+
+      if (!supported) {
+        els.btnToggleScreenShare.setAttribute(
+          "aria-label",
+          t("media.screenShareUnsupported"),
+        );
+        els.btnToggleScreenShare.setAttribute(
+          "title",
+          t("media.screenShareUnsupported"),
+        );
+      } else {
+        const key = sharing ? "media.screenShareOn" : "media.screenShareOff";
+        els.btnToggleScreenShare.setAttribute("aria-label", t(key));
+        els.btnToggleScreenShare.setAttribute("title", t(key));
+      }
+    }
   }
 
   async function attachLocalMediaToPeer() {
@@ -117,6 +152,7 @@ export function createMediaController({
   }
 
   function stopLocal() {
+    screenShare.stop().catch(() => {});
     if (localStream) {
       localStream.getTracks().forEach((track) => {
         track.stop();
@@ -151,6 +187,16 @@ export function createMediaController({
     refreshMediaButtons(connected);
   }
 
+  async function toggleScreenShare(connected) {
+    if (!connected || !screenShare.isSupported()) return;
+    if (!localStream) {
+      await ensureMedia();
+      await attachLocalMediaToPeer();
+    }
+    await screenShare.toggle();
+    refreshMediaButtons(connected);
+  }
+
   return {
     ensureMedia,
     attachLocalMediaToPeer,
@@ -158,6 +204,8 @@ export function createMediaController({
     stopLocal,
     toggleMic,
     toggleCam,
+    toggleScreenShare,
+    isScreenSharing: () => screenShare.isSharing(),
     getLocalStream: () => localStream,
   };
 }

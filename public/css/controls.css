@@ -170,6 +170,12 @@
   opacity: 1;
 }
 
+.ctrl.is-sharing:not(:disabled) {
+  background: var(--accent);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 12px rgba(43, 176, 166, 0.45);
+}
+
 .ctrl.is-ringing:not(:disabled) {
   background: rgba(245, 158, 11, 0.9);
   border-color: rgba(251, 191, 36, 0.8);

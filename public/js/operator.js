@@ -207,8 +207,10 @@ export function createOperator({
     els.btnHangup.disabled = !isConnectedFlag;
     els.btnToggleMic.disabled = !isConnectedFlag;
     els.btnToggleCam.disabled = !isConnectedFlag;
+    if (els.btnToggleScreenShare) els.btnToggleScreenShare.disabled = !isConnectedFlag;
     if (els.btnVideoQuality) els.btnVideoQuality.disabled = !isConnectedFlag;
     if (els.btnSendCommand) els.btnSendCommand.disabled = !isConnectedFlag;
+    media.refreshMediaButtons(isConnectedFlag);
     locomotion.setEnabled(isConnectedFlag);
     head.setEnabled(isConnectedFlag);
     volume.setEnabled(isConnectedFlag);
@@ -438,6 +440,11 @@ export function createOperator({
     els.btnToggleCam.addEventListener("click", () => {
       media.toggleCam(connected).catch((err) => console.error(err));
     });
+    if (els.btnToggleScreenShare) {
+      els.btnToggleScreenShare.addEventListener("click", () => {
+        media.toggleScreenShare(connected).catch((err) => console.error(err));
+      });
+    }
 
     const tooltips = initTooltips(els.callBar || document, ".ctrl");
 
